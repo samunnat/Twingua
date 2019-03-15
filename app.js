@@ -1,30 +1,33 @@
-const request = require('request');
+const request = require("request");
 const express = require("express");
 const app = express();
-const port = 3000;
 const googleapi = "https://dataproc.googleapis.com";
 
 // Homepage Route
 app.get("/", (req, res) => {
-  res.send("hello world");
+  res
+    .status(200)
+    .send("hello world")
+    .end();
 });
 
 app.get("/languages", (req, res) => {
-  const resource = "/v1/projects/celtic-vent-231205/regions/global/jobs:submit/"
+  const resource =
+    "/v1/projects/celtic-vent-231205/regions/global/jobs:submit/";
   const opts = {
-    "url": `${googleapi}${resource}`,
-    "json": true,
-    "body": {
-      "projectId": "celtic-vent-231205",
-      "job": {
-        "placement": {
-          "clusterName": "celticventcluster"
+    url: `${googleapi}${resource}`,
+    json: true,
+    body: {
+      projectId: "celtic-vent-231205",
+      job: {
+        placement: {
+          clusterName: "celticventcluster"
         },
-        "reference": {
-          "jobId": "job-07a4f20c"
+        reference: {
+          jobId: "job-07a4f20c"
         },
-        "hadoopJob": {
-            "args": [
+        hadoopJob: {
+          args: [
             "wordcount-hbase",
             "gs://lesv-big-public-data/books/book",
             "gs://lesv-big-public-data/books/b10",
@@ -33,14 +36,15 @@ app.get("/languages", (req, res) => {
             "gs://lesv-big-public-data/books/b6130",
             "WordCount-1552544215"
           ],
-          "mainClass": "gs://testbucketcelticvent/google-cloud-dataproc-metainfo/84edc588-da8a-4bdf-881b-c395c5e76ba7/jobs/99e233bd0fd0439391b3573d605abdb6/staging/wordcount-mapreduce-0-SNAPSHOT-jar-with-dependencies.jar"
+          mainClass:
+            "gs://testbucketcelticvent/google-cloud-dataproc-metainfo/84edc588-da8a-4bdf-881b-c395c5e76ba7/jobs/99e233bd0fd0439391b3573d605abdb6/staging/wordcount-mapreduce-0-SNAPSHOT-jar-with-dependencies.jar"
         }
       }
     }
   };
 
   // TODO: Need to create a service worker and authenicate it for the request to be accepted
-  request.post(opts, function(err, response, body){ 
+  request.post(opts, function(err, response, body) {
     console.log(`Error: ${err}`);
     console.log(`Response: ${JSON.stringify(response)}`);
     console.log(`Body: ${body}`);
@@ -54,4 +58,8 @@ app.get("/languages", (req, res) => {
   res.json(test);
 });
 
-app.listen(port, () => console.log(`Example app is listening on port ${port}`));
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`App listening on port ${PORT}`);
+  console.log("Press Ctrl+C to quit.");
+});
