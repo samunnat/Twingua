@@ -9,13 +9,15 @@ public class LanguageCountDriver {
     ProgramDriver programDriver = new ProgramDriver();
     int exitCode = -1;
     try {
-      programDriver.addClass("languagecount-hbase", LanguageCountHBase.class,
-          "A map/reduce program that counts the language in the bounding box");
+        // Query BigTable
 
-      programDriver.driver(args);
-      exitCode = programDriver.run(args);
+        programDriver.addClass("languagecount-hbase", LanguageCountHBase.class,
+            "A map/reduce program that counts the languages in the bounding box");
+
+        programDriver.driver(args);
+        exitCode = programDriver.run(args);
     } catch (Throwable e) {
-      e.printStackTrace();
+        e.printStackTrace();
     }
     System.exit(exitCode);
   }
