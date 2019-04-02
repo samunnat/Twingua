@@ -2,10 +2,15 @@ const request = require("request");
 const express = require("express");
 const app = express();
 const dataproc = require("@google-cloud/dataproc");
-const credentials = require("/Users/Ryan_Loi/Downloads/celtic-vent-231205-27929c26f65b.json");
+const credentials = require("/Users/Ryan_Loi/Downloads/big-data-project-233100-e78608d5e4c9.json");
 
-const client = new dataproc.v1.JobControllerClient({
+// const client = new dataproc.v1.JobControllerClient({
+//   credentials: credentials
+// });
+
+const client = new dataproc.v1.ClusterControllerClient({
   credentials: credentials
+  // optional auth parameters.
 });
 
 // Homepage Route
@@ -18,49 +23,52 @@ app.get("/", (req, res) => {
 
 app.get("/languages", (req, res) => {
   console.log("Called languages route");
-
+  // res.send(client.toString());
   const dataprocRequest = {
-    projectId: "celtic-vent-231205",
-    region: "global",
+    projectId: "big-data-project-233100",
+    region: "global"
     // https://cloud.google.com/nodejs/docs/reference/dataproc/0.4.x/google.cloud.dataproc.v1#.Job
-    job: {
-      placement: {
-        clusterName: "celticventcluster"
-      },
-      reference: {
-        jobId: "job-07a4f20c"
-      },
-      hadoopJob: {
-        args: [
-          "wordcount-hbase",
-          "gs://lesv-big-public-data/books/book",
-          "gs://lesv-big-public-data/books/b10",
-          "gs://lesv-big-public-data/books/b100",
-          "gs://lesv-big-public-data/books/b1232",
-          "gs://lesv-big-public-data/books/b6130",
-          "WordCount-1552544215"
-        ],
-        mainClass:
-          "gs://testbucketcelticvent/google-cloud-dataproc-metainfo/84edc588-da8a-4bdf-881b-c395c5e76ba7/jobs/99e233bd0fd0439391b3573d605abdb6/staging/wordcount-mapreduce-0-SNAPSHOT-jar-with-dependencies.jar"
-      }
-    }
+    // job: {
+    //   placement: {
+    //     clusterName: "testcl"
+    //   },
+    //   reference: {
+    //     jobId: "job-07a4f20c"
+    //   },
+    //   hadoopJob: {
+    //     args: ["wordcount-hbase", "gs://bigdata_tweet_dump"],
+    //     mainClass:
+    //       "gs://testbucketcelticvent/google-cloud-dataproc-metainfo/84edc588-da8a-4bdf-881b-c395c5e76ba7/jobs/99e233bd0fd0439391b3573d605abdb6/staging/wordcount-mapreduce-0-SNAPSHOT-jar-with-dependencies.jar"
+    //   }
+    // }
   };
-
+  console.log(client);
   client
-    .submitJob(request)
+    .listClusters(dataprocRequest)
     .then(responses => {
-      const response = responses[0];
-      console.log(`Response: ${JSON.stringify(response)}`);
+      const resources = responses[0];
+      console.log("Total resources:", resources.length);
+      for (let i = 0; i < resources.length; i += 1) {
+        console.log(resources[i]);
+      }
     })
-    .catch(err => {
-      console.error(err);
-    });
+    .catch(err => console.log(err));
 
-  const test = {
-    hi: 2,
-    hello: "string"
-  };
-  res.json(test);
+  // client
+  //   .submitJob(request)
+  //   .then(responses => {
+  //     const response = responses[0];
+  //     console.log(`Response: ${JSON.stringify(response)}`);
+  //   })
+  //   .catch(err => {
+  //     console.error(err);
+  //   });
+
+  // const test = {
+  //   hi: 2,
+  //   hello: "string"
+  // };
+  // res.json(test);
 });
 
 const PORT = process.env.PORT || 8080;
