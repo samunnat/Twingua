@@ -141,9 +141,9 @@ class Map extends React.Component {
     // });
   }
 
-  zoomHandler = () => {
+  zoomHandler = e => {
     // Call API to query bounding box information
-    console.log("zoom end");
+    console.log("Zoom level: " + e.target._zoom);
   };
 
   radioHandler = e => {
