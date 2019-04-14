@@ -1,19 +1,4 @@
-/*
- * Copyright 2014 Sreejith Pillai
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.twing.app;
+package com.twingua.hbase.bulkload;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,18 +10,21 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.GsonBuilder;
 
-public class HBaseMapper extends
-		Mapper<LongWritable, Text, ImmutableBytesWritable, KeyValue> {
+import ch.hsr.geohash.GeoHash;
+
+public class HBaseMapper extends Mapper<LongWritable, Text, ImmutableBytesWritable, KeyValue> {
 	final static byte[] COL_FAMILY = "tweetFamily".getBytes();
-//This should be the same as in the create table command in hBase shell
-	List<String> columnList = new ArrayList<String>();
-	ParseXml parseXml = new ParseXml();
-	ImmutableBytesWritable hKey = new ImmutableBytesWritable();
-	KeyValue kv;
 
-	protected void setup(Context context) throws IOException,
-			InterruptedException {
+	//This should be the same as in the create table command in hBase shell
+	List<String> columnList = new ArrayList<String>();
+	ImmutableBytesWritable hKey = new ImmutableBytesWritable();
+
+	protected void setup(Context context) throws IOException, InterruptedException {
 		columnList.add("id");
 		columnList.add("timestamp_ms");
 		columnList.add("geo");
@@ -49,71 +37,73 @@ public class HBaseMapper extends
 	}
 
 	/**
-	 * Map method gets XML data from tag <book> to </book>. To read the xml content the data is sent to getXmlTags method
-	 * which parse the XML using STAX parser and returns an String array of contents.
-	 * String array is iterated and each elements are stored in KeyValue
-	 * 
+	 * Map method gets JSON data from google storage. The line is converted to a string then converted into a JsonObject.
+	 * This object is used to create column families.
 	 */
-	public void map(LongWritable key, Text value, Context context)
-			throws InterruptedException, IOException {
+	public void map(LongWritable key, Text value, Context context) throws InterruptedException, IOException {
 		String line = value.toString();
 
-		String fields[] = parseXml.getXmlTags(line, columnList);
+		int numberOfCharacters = 12;
 
-		hKey.set(fields[0].getBytes());
+		Gson gson = new GsonBuilder().create();
 
-		if (!fields[1].equals("")) {
-			kv = new KeyValue(hKey.get(), COL_FAMILY,
-					HColumnEnum.COL_ID.getColumnName(),
-					fields[1].getBytes());
-			context.write(hKey, kv);
-		}
+		try {
+			JsonObject twt = new JsonParser().parse(line).getAsJsonObject();
 
-		if (!fields[2].equals("")) {
-			kv = new KeyValue(hKey.get(), COL_FAMILY,
-					HColumnEnum.COL_TIME.getColumnName(), fields[2].getBytes());
-			context.write(hKey, kv);
-		}
+			// Creating column family
 
-		if (!fields[3].equals("")) {
-			kv = new KeyValue(hKey.get(), COL_FAMILY,
-					HColumnEnum.COL_GEO.getColumnName(), fields[3].getBytes());
-			context.write(hKey, kv);
-		}
-		if (!fields[4].equals("")) {
-			kv = new KeyValue(hKey.get(), COL_FAMILY,
-					HColumnEnum.COL_BOUNDINGBOX.getColumnName(), fields[4].getBytes());
-			context.write(hKey, kv);
-		}
-		if (!fields[5].equals("")) {
-			kv = new KeyValue(hKey.get(), COL_FAMILY,
-					HColumnEnum.COL_LANG.getColumnName(),
-					fields[5].getBytes());
-			context.write(hKey, kv);
-		}
-		if (!fields[6].equals("")) {
-			kv = new KeyValue(hKey.get(), COL_FAMILY,
-					HColumnEnum.COL_RETWEETCT.getColumnName(),
-					fields[6].getBytes());
-			context.write(hKey, kv);
-		}
-		if (!fields[7].equals("")) {
-			kv = new KeyValue(hKey.get(), COL_FAMILY,
-					HColumnEnum.COL_FAVCT.getColumnName(),
-					fields[7].getBytes());
-			context.write(hKey, kv);
-		}
-		if (!fields[8].equals("")) {
-			kv = new KeyValue(hKey.get(), COL_FAMILY,
-					HColumnEnum.COL_QUOTECT.getColumnName(),
-					fields[8].getBytes());
-			context.write(hKey, kv);
-		}
-		if (!fields[9].equals("")) {
-			kv = new KeyValue(hKey.get(), COL_FAMILY,
-					HColumnEnum.COL_REPLYCT.getColumnName(),
-					fields[9].getBytes());
-			context.write(hKey, kv);
+			hKey.set(twt.get("id").toString().getBytes());
+
+			//hKey.set(GeoHash.encodeHash((twt.get("place").getAsJsonObject().get("bounding_box")
+			//	.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(0).getAsJsonArray().get(1)).getAsDouble(),
+			//	(twt.get("place").getAsJsonObject().get("bounding_box").getAsJsonObject()
+			//	.getAsJsonArray("coordinates").get(0).getAsJsonArray().get(0).getAsJsonArray().get(0)).getAsDouble()).getBytes());
+
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_TIME.getColumnName(), twt.get("timestamp_ms").toString().getBytes()));
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_GEO.getColumnName(), twt.get("geo").toString().getBytes()));
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_BOUNDINGBOX.getColumnName(), twt.get("place").toString().getBytes()));
+			
+			double lat1 = (twt.get("place").getAsJsonObject().get("bounding_box")
+				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(0).getAsJsonArray().get(1)).getAsDouble();
+
+			double long1 = (twt.get("place").getAsJsonObject().get("bounding_box")
+				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(0).getAsJsonArray().get(0)).getAsDouble();
+
+			double lat2 = (twt.get("place").getAsJsonObject().get("bounding_box")
+				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(1).getAsJsonArray().get(1)).getAsDouble();
+
+			double long2 = (twt.get("place").getAsJsonObject().get("bounding_box")
+				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(1).getAsJsonArray().get(0)).getAsDouble();
+
+			double lat3 = (twt.get("place").getAsJsonObject().get("bounding_box")
+				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(2).getAsJsonArray().get(1)).getAsDouble();
+
+			double long3 = (twt.get("place").getAsJsonObject().get("bounding_box")
+				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(2).getAsJsonArray().get(0)).getAsDouble();
+
+
+			double lat4 = (twt.get("place").getAsJsonObject().get("bounding_box")
+				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(3).getAsJsonArray().get(1)).getAsDouble();
+
+			double long4 = (twt.get("place").getAsJsonObject().get("bounding_box")
+				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(3).getAsJsonArray().get(0)).getAsDouble();
+
+			double hashlat = (lat1 + lat2 + lat3 + lat4)/4;
+			double hashlong = (long1 + long2 + long3 + long4)/4;
+
+
+			GeoHash bbGeohash = GeoHash.withCharacterPrecision(hashlat, hashlong, numberOfCharacters);
+
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_BOUNDINGGEO.getColumnName(), 
+				bbGeohash.toBase32().getBytes()));
+			
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_LANG.getColumnName(), twt.get("lang").toString().getBytes()));
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_RETWEETCT.getColumnName(), twt.get("retweet_count").toString().getBytes()));
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_FAVCT.getColumnName(), twt.get("favorite_count").toString().getBytes()));
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_QUOTECT.getColumnName(), twt.get("quote_count").toString().getBytes()));
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_REPLYCT.getColumnName(), twt.get("reply_count").toString().getBytes()));
+		} catch (Exception e) {
+
 		}
 	}
 }

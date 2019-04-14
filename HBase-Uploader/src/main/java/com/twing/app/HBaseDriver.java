@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.twing.app;
+package com.twingua.hbase.bulkload;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -28,6 +28,7 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,7 @@ public class HBaseDriver {
 
 	/**
 	 * Main entry point for the example.
-	 * 
+	 *
 	 * @param args
 	 *            arguments
 	 * @throws Exception
@@ -76,20 +77,20 @@ public class HBaseDriver {
 	public static void main(String[] args) throws Exception {
 		LOG.info("Code started");
 		HBaseDriver.connectHBase(); // Initializing connection with HBase
-		
+
 		String inputPath=args[0];
 		String outputPath=args[1];
 		String tableName=args[2];
 
 		conf.set("hbase.table.name", tableName);
-		conf.set("xmlinput.start", "<book>");
-		conf.set("xmlinput.end", "</book>");
+		// conf.set("xmlinput.start", "<book>");
+		// conf.set("xmlinput.end", "</book>");
 
 		Job job = new Job(conf);
 		job.setJarByClass(HBaseDriver.class);
 		job.setJobName("Bulk Load XML into HBase");
 
-		job.setInputFormatClass(XmlInputFormat.class);
+		job.setInputFormatClass(TextInputFormat.class);
 
 		job.setMapperClass(HBaseMapper.class);
 

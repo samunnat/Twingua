@@ -13,7 +13,7 @@ public class ParseXml {
 
 	public String[] getXmlTags(String line, List<String> columnList) {
 		
-		String[] fields = new String[7];
+		String[] fields = new String[200];
 		
 		try {
 						
