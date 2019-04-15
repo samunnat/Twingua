@@ -13,7 +13,7 @@ const client = new dataproc.v1.JobControllerClient({
 // Homepage Route
 app.get("/", (req, res) => {
   console.log("Called root route");
-
+  console.log(Object.keys(req.query).length);
   res
     .status(200)
     .send("hello world")
@@ -24,6 +24,13 @@ app.get("/", (req, res) => {
 //  - Uploads twitter json files from bucket into HBase
 app.get("/BulkLoad", (req, res) => {
   console.log("Called BulkLoad route");
+
+  if (Object.keys(req.query).length != 1 || req.query.filename === undefined) {
+    console.log("Invalid argument");
+    res.status(400).end();
+  }
+
+  const filename = req.query.filename;
 
   // Creating job request configuration to start BulkLoad
   const dataprocRequest = {
@@ -37,9 +44,9 @@ app.get("/BulkLoad", (req, res) => {
       },
       hadoopJob: {
         args: [
-          "com.twing.app.HBaseDriver",
-          "gs://dataproctst/datInput.xml",
-          "gs://dataproctst/hfiles",
+          "com.twingua.hbase.bulkload.HBaseDriver",
+          `gs://bigdata_tweet_dump/${filename}.json`,
+          `gs://dataproctst/hfiles/${filename}`,
           "tweet"
         ],
         mainJarFileUri: "gs://dataproctst/hbase-bulkload-1.0.jar"
@@ -54,7 +61,10 @@ app.get("/BulkLoad", (req, res) => {
     .submitJob(dataprocRequest)
     .then(responses => {
       console.log("Job Submitted");
-      res.send("Job Submitted");
+      res
+        .status(200)
+        .send("Job Submitted")
+        .end();
     })
     .catch(err => console.log("Error:", err));
 });
