@@ -15,11 +15,11 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.util.Bytes;
 
 public class QueryBigTable {
-    public static void main(String[] args) {
+    public static void main() {
 
     }
 
-    public static void queryTable (int[] boundingBox, TableName tableName, Configuration config, ) {
+    public static void queryTable (int[] boundingBox, TableName tableName, Configuration config) {
         HTable table = new HTable(config, tableName);
 
         // NOTE: If this is to be extended to other places in the world we need to account for N or S
