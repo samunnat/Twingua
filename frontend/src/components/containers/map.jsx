@@ -92,7 +92,8 @@ class Map extends React.Component {
     };
 
     this.map = Leaflet.map("map", {
-      center: [47.526, 0],
+      center: [52.5, 0],
+      minZoom: 4,
       zoom: 5,
       layers: [this.layers.labels]
     });
@@ -102,7 +103,7 @@ class Map extends React.Component {
 
     // Adding bounding boxes
     const incrementAmt = 0.1;
-    const end = 10;
+    const end = 5;
     this.boundingBoxes = new Array(end / incrementAmt);
     for (let i = 0; i < end; i += incrementAmt) {
       this.boundingBoxes[i] = [];
@@ -144,6 +145,17 @@ class Map extends React.Component {
   zoomHandler = e => {
     // Call API to query bounding box information
     console.log("Zoom level: " + e.target._zoom);
+    const bounds = this.map.getBounds();
+    const northWest = {
+      lat: bounds._northEast.lat,
+      long: bounds._southWest.lng
+    };
+    const southEast = {
+      lat: bounds._southWest.lat,
+      long: bounds._northEast.lng
+    };
+    console.log(this.map.getBounds());
+    console.log([northWest, southEast]);
   };
 
   radioHandler = e => {
