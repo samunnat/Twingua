@@ -35,12 +35,14 @@ object HBaseRecord {
 
 object Hello extends Greeting with App {
   println(GeoHash.encodeHash(55.0, 55.0, 5))
+
   val catalog =
   s"""{
       |"table":{"namespace":"default", "name":"tweettst"},
-      |"rowkey":"key",
+      |"rowkey":"id",
       |"columns":{
-        |"retweets":{"cf":"tweetFamily", "col":"retweet_count", "type":"int"}
+        |"id":{"cf":"rowkey", "col":"id", "type":"string"},
+        |"retweets":{"cf":"tweetFamily", "col":"retweet_count", "type":"string"}
       |}
     |}""".stripMargin
 
@@ -54,22 +56,23 @@ object Hello extends Greeting with App {
 
   import sqlContext.implicits._
 
-  // def withCatalog(cat: String): DataFrame = {
-  //   sqlContext
-  //     .read
-  //     .options(Map(HBaseTableCatalog.tableCatalog->cat))
-  //     .format("org.apache.spark.sql.execution.datasources.hbase")
-  //     .load()
-  // }
+  def withCatalog(cat: String): DataFrame = {
+    sqlContext
+      .read
+      .options(Map(HBaseTableCatalog.tableCatalog->cat))
+      .format("org.apache.spark.sql.execution.datasources.hbase")
+      .load()
+  }
 
   val df = spark
     .read
     .option(HBaseTableCatalog.tableCatalog, catalog)
     .format("org.apache.spark.sql.execution.datasources.hbase")
     .load()
+  df.show()
 
-  println(df.count())
-
+  println("tweetst count")
+  println(df.count)
   spark.stop()
   println("hello world")
 }
