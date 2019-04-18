@@ -18,10 +18,70 @@ const client = new dataproc.v1.JobControllerClient({
 
 var analytics = {};
 
-// Everyone 1 hour submit a job to query the analytics table and then read the resulting results from a bucket
-// setInterval(function() {
-//   console.log("hi");
-// }, 3600000);
+// Every 20 minutes submit a job to query the analytics table and then read the resulting results from a bucket
+setInterval(function() {
+  // Creating job request configuration to run Spark Job
+  const sparkRequest = {
+    projectId: "big-data-project-233100",
+    region: "us-west1",
+    job: {
+      placement: {
+        clusterName: "testcl"
+      },
+      hadoopJob: {
+        args: [
+          "com.twingua.hbase.bulkload.HBaseDriver",
+          `gs://bigdata_tweet_dump/tweets_eu_30.json`,
+          `gs://dataproctst/hfiles/tweets_eu_30`,
+          "tweet"
+        ],
+        mainJarFileUri: "gs://dataproctst/hbase-bulkload-1.0.jar"
+      }
+    }
+  };
+
+  client.submitJob(sparkRequest).then(responses => {
+    console.log("Job Submitted");
+    const jobId = responses[0].reference.jobId;
+
+    // Dataproc every 1.5 to see if the job is done
+    const getJobInterval = setInterval(() => {
+      const getJobRequest = {
+        projectId: "big-data-project-233100",
+        region: "us-west1",
+        jobId: jobId
+      };
+      client.getJob(getJobRequest).then(element => {
+        // doThingsWith(element)
+        console.log("GOT JOB");
+        console.log("JOB STATUS:", element[0].status.state);
+        const jobRunning = element[0].status.state === "RUNNING";
+        console.log("jobRunning:", jobRunning);
+        if (!jobRunning) {
+          clearInterval(getJobInterval);
+          console.log("JOB DONE");
+          // Job is done now, so download results from bucket
+          file.download(function(err, contents) {
+            console.log("downloaded!");
+            if (err !== null) {
+              console.log("ERROR:", err);
+              res.send("failed D:");
+            } else {
+              // Load results from file into memory
+              analytics = JSON.parse(contents.toString());
+              res.send("worked!");
+
+              // Delete file on the bucket since we no longer need it
+              file.delete(function(err, apiResponse) {
+                console.log(err !== null ? apiResponse : err);
+              });
+            }
+          });
+        }
+      });
+    }, 1500);
+  });
+}, 1200000);
 
 // Homepage Route
 app.get("/", (req, res) => {
@@ -87,79 +147,6 @@ app.get("/BulkLoad", (req, res) => {
 //  - Gets counts of each language within each bounding box
 app.get("/languages", (req, res) => {
   console.log("Called languages route");
-
-  // Creating job request configuration to run Spark Job
-  const sparkRequest = {
-    projectId: "big-data-project-233100",
-    region: "us-west1",
-    job: {
-      placement: {
-        clusterName: "testcl"
-      },
-      hadoopJob: {
-        args: [
-          "com.twingua.hbase.bulkload.HBaseDriver",
-          `gs://bigdata_tweet_dump/tweets_eu_30.json`,
-          `gs://dataproctst/hfiles/tweets_eu_30`,
-          "tweet"
-        ],
-        mainJarFileUri: "gs://dataproctst/hbase-bulkload-1.0.jar"
-      }
-    }
-  };
-
-  // Submitting job request to dataproc
-  file.download(function(err, contents) {
-    console.log("downloaded!");
-    if (err !== null) {
-      console.log("ERROR:", err);
-      res.send("failed D:");
-    } else {
-      console.log(contents);
-      const tweet = JSON.parse(contents.toString());
-      console.log(tweet);
-      console.log(analytics);
-      res.send("worked!");
-    }
-  });
-  // client
-  //   .submitJob(sparkRequest)
-  //   .then(responses => {
-  //     console.log("Job Submitted");
-  //     const jobId = responses[0].reference.jobId;
-
-  //     // Dataproc every 1.5 to see if the job is done
-  //     const getJobInterval = setInterval(() => {
-  //       const getJobRequest = {
-  //         projectId: "big-data-project-233100",
-  //         region: "us-west1",
-  //         jobId: jobId
-  //       };
-  //       client.getJob(getJobRequest).then(element => {
-  //         // doThingsWith(element)
-  //         console.log("GOT JOB");
-  //         console.log("JOB STATUS:", element[0].status.state);
-  //         const jobRunning = element[0].status.state === "RUNNING";
-  //         console.log("jobRunning:", jobRunning);
-  //         if (!jobRunning) {
-  //           clearInterval(getJobInterval);
-  //           console.log("JOB DONE");
-  //           // Job is done now, so download results from bucket
-
-  //           // Load results from file into memory
-
-  //           // Delete file on the bucket since we no longer need it
-  //         }
-  //       });
-  //     }, 1500);
-
-  // Delete the interval after 20 seconds
-  // setTimeout(() => {
-  //   console.log(getJobInterval);
-  //   clearInterval(getJobInterval);
-  // }, 2000);
-  // })
-  // .catch(err => console.log("Error:", err));
 });
 
 const PORT = process.env.PORT || 8080;
