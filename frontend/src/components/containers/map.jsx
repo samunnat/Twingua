@@ -144,18 +144,86 @@ class Map extends React.Component {
 
   zoomHandler = e => {
     // Call API to query bounding box information
+    var precision;
+    switch (e.target._zoom) {
+      case 4:
+      case 5:
+      case 6:
+        precision = 4;
+        break;
+      case 7:
+      case 8:
+        precision = 5;
+        break;
+      default:
+        precision = 6;
+        break;
+    }
+
     console.log("Zoom level: " + e.target._zoom);
     const bounds = this.map.getBounds();
-    const northWest = {
-      lat: bounds._northEast.lat,
-      long: bounds._southWest.lng
-    };
-    const southEast = {
-      lat: bounds._southWest.lat,
-      long: bounds._northEast.lng
-    };
-    console.log(this.map.getBounds());
-    console.log([northWest, southEast]);
+
+    // TESTING
+    precision = 6;
+    fetch(
+      `http://localhost:3000/languages?lat1=${bounds._southWest.lat}&long1=${
+        bounds._southWest.lng
+      }&lat2=${bounds._northEast.lat}&long2=${
+        bounds._northEast.lng
+      }&precision=${precision}`,
+      {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    )
+      .then(response => response.json())
+      .then(data => {
+        this.clearMap();
+        data.forEach(val => {
+          const key = Object.keys(val)[0];
+          const coords = key.split(",").map(ele => parseFloat(ele));
+          const languages = Object.keys(val[key]);
+          var max = (-1, -1);
+          languages.forEach((count, index) => {
+            if (count > max[1]) {
+              max = (index, count);
+            }
+          });
+
+          if (max[0] !== -1) {
+            Leaflet.polygon(
+              [
+                [coords[0], coords[1]], // lat1, long1
+                [coords[0], coords[3]], // lat1, long2
+                [coords[2], coords[3]], // lat2, long2
+                [coords[2], coords[1]] // lat2, long1
+              ],
+              {
+                color: this.colors[
+                  Math.floor(Math.random() * this.colors.length)
+                ],
+                fillOpacity: 0.2
+              }
+            ).addTo(this.map);
+          }
+        });
+      })
+      .catch(e =>
+        console.log("Can’t access endpoint. Blocked by browser?" + e)
+      );
+  };
+
+  clearMap = () => {
+    for (var i in this.map._layers) {
+      if (this.map._layers[i]._path != undefined) {
+        try {
+          this.map.removeLayer(this.map._layers[i]);
+        } catch (e) {
+          console.log("problem with " + e + this.map._layers[i]);
+        }
+      }
+    }
   };
 
   radioHandler = e => {
