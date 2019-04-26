@@ -1,0 +1,8 @@
+com\twing\app\XmlInputFormat.class
+com\twingua\hbase\bulkload\HBaseDriver.class
+com\twingua\hbase\bulkload\HColumnEnum.class
+com\twing\app\ParseXml$1.class
+com\twing\app\ParseXml.class
+com\twingua\hbase\bulkload\HBaseMapper.class
+com\twing\app\CreateTable.class
+com\twing\app\XmlInputFormat$XmlRecordReader.class
