@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -42,8 +43,11 @@ public class HBaseMapper extends Mapper<LongWritable, Text, ImmutableBytesWritab
 	 */
 	public void map(LongWritable key, Text value, Context context) throws InterruptedException, IOException {
 		String line = value.toString();
+		Configuration conf = context.getConfiguration();
+		String batch = conf.get("hbase.batch.name");
+		GeoHash bbGeohash;
 
-		int numberOfCharacters = 12;
+		int numberOfCharacters = 6;
 
 		Gson gson = new GsonBuilder().create();
 
@@ -52,7 +56,44 @@ public class HBaseMapper extends Mapper<LongWritable, Text, ImmutableBytesWritab
 
 			// Creating column family
 
-			hKey.set(twt.get("id").toString().getBytes());
+			if (twt.get("geo").toString().equals("null")) {
+				double lat1 = (twt.get("place").getAsJsonObject().get("bounding_box")
+					.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(0).getAsJsonArray().get(1)).getAsDouble();
+
+				double long1 = (twt.get("place").getAsJsonObject().get("bounding_box")
+					.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(0).getAsJsonArray().get(0)).getAsDouble();
+
+				double lat2 = (twt.get("place").getAsJsonObject().get("bounding_box")
+					.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(1).getAsJsonArray().get(1)).getAsDouble();
+
+				double long2 = (twt.get("place").getAsJsonObject().get("bounding_box")
+					.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(1).getAsJsonArray().get(0)).getAsDouble();
+
+				double lat3 = (twt.get("place").getAsJsonObject().get("bounding_box")
+					.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(2).getAsJsonArray().get(1)).getAsDouble();
+
+				double long3 = (twt.get("place").getAsJsonObject().get("bounding_box")
+					.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(2).getAsJsonArray().get(0)).getAsDouble();
+
+
+				double lat4 = (twt.get("place").getAsJsonObject().get("bounding_box")
+					.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(3).getAsJsonArray().get(1)).getAsDouble();
+
+				double long4 = (twt.get("place").getAsJsonObject().get("bounding_box")
+					.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(3).getAsJsonArray().get(0)).getAsDouble();
+
+				double hashlat = (lat1 + lat2 + lat3 + lat4)/4;
+				double hashlong = (long1 + long2 + long3 + long4)/4;
+
+				bbGeohash = GeoHash.withCharacterPrecision(hashlat, hashlong, numberOfCharacters);
+				hKey.set((batch + "_" + bbGeohash.toBase32() + "_" + (twt.get("id").toString())).getBytes());
+			} else {
+				double latpt = twt.get("geo").getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsDouble();
+				double longpt = twt.get("geo").getAsJsonObject().getAsJsonArray("coordinates").get(1).getAsDouble();
+
+				bbGeohash = GeoHash.withCharacterPrecision(latpt, longpt, numberOfCharacters);
+				hKey.set((batch + "_" + bbGeohash.toBase32() + "_" + (twt.get("id").toString())).getBytes());
+			}
 
 			//hKey.set(GeoHash.encodeHash((twt.get("place").getAsJsonObject().get("bounding_box")
 			//	.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(0).getAsJsonArray().get(1)).getAsDouble(),
@@ -62,38 +103,14 @@ public class HBaseMapper extends Mapper<LongWritable, Text, ImmutableBytesWritab
 			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_TIME.getColumnName(), twt.get("timestamp_ms").toString().getBytes()));
 			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_GEO.getColumnName(), twt.get("geo").toString().getBytes()));
 			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_BOUNDINGBOX.getColumnName(), twt.get("place").toString().getBytes()));
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_PLACETYPE.getColumnName(),
+				twt.get("place").getAsJsonObject().get("place_type").toString().getBytes()));
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_PLACENAME.getColumnName(),
+				twt.get("place").getAsJsonObject().get("name").toString().getBytes()));
+			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_PLACECC.getColumnName(),
+				twt.get("place").getAsJsonObject().get("country_code").toString().getBytes()));
+
 			
-			double lat1 = (twt.get("place").getAsJsonObject().get("bounding_box")
-				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(0).getAsJsonArray().get(1)).getAsDouble();
-
-			double long1 = (twt.get("place").getAsJsonObject().get("bounding_box")
-				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(0).getAsJsonArray().get(0)).getAsDouble();
-
-			double lat2 = (twt.get("place").getAsJsonObject().get("bounding_box")
-				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(1).getAsJsonArray().get(1)).getAsDouble();
-
-			double long2 = (twt.get("place").getAsJsonObject().get("bounding_box")
-				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(1).getAsJsonArray().get(0)).getAsDouble();
-
-			double lat3 = (twt.get("place").getAsJsonObject().get("bounding_box")
-				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(2).getAsJsonArray().get(1)).getAsDouble();
-
-			double long3 = (twt.get("place").getAsJsonObject().get("bounding_box")
-				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(2).getAsJsonArray().get(0)).getAsDouble();
-
-
-			double lat4 = (twt.get("place").getAsJsonObject().get("bounding_box")
-				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(3).getAsJsonArray().get(1)).getAsDouble();
-
-			double long4 = (twt.get("place").getAsJsonObject().get("bounding_box")
-				.getAsJsonObject().getAsJsonArray("coordinates").get(0).getAsJsonArray().get(3).getAsJsonArray().get(0)).getAsDouble();
-
-			double hashlat = (lat1 + lat2 + lat3 + lat4)/4;
-			double hashlong = (long1 + long2 + long3 + long4)/4;
-
-
-			GeoHash bbGeohash = GeoHash.withCharacterPrecision(hashlat, hashlong, numberOfCharacters);
-
 			context.write(hKey, new KeyValue(hKey.get(), COL_FAMILY, HColumnEnum.COL_BOUNDINGGEO.getColumnName(), 
 				bbGeohash.toBase32().getBytes()));
 			

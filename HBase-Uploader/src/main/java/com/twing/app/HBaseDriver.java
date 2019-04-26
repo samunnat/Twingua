@@ -81,10 +81,11 @@ public class HBaseDriver {
 		String inputPath=args[0];
 		String outputPath=args[1];
 		String tableName=args[2];
-
+		String batchNumber = args[3];
 		conf.set("hbase.table.name", tableName);
 		// conf.set("xmlinput.start", "<book>");
 		// conf.set("xmlinput.end", "</book>");
+		conf.set("hbase.batch.name", batchNumber);
 
 		Job job = new Job(conf);
 		job.setJarByClass(HBaseDriver.class);
