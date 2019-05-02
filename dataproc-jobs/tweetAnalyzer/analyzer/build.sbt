@@ -14,15 +14,11 @@ lazy val root = (project in file(".")).
     libraryDependencies += "com.github.davidmoten" % "geo" % "0.7.1" % "provided",
     libraryDependencies += "org.apache.spark" % "spark-core_2.11" % sparkVersion % "provided",
     libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % sparkVersion % "provided",
-    // libraryDependencies ++= Seq(
-    //   "org.apache.hbase" % "hbase-server" % hbaseVersion % "provided",
-    //   "org.apache.hbase" % "hbase-client" % hbaseVersion % "provided",
-    //   "org.apache.hbase" % "hbase-common" % hbaseVersion % "provided",
-    //   "org.apache.hadoop" % "hadoop-common" % "2.7.1" % "provided"
-    // ),
+    libraryDependencies += "org.apache.spark" % "spark-streaming_2.11" % sparkVersion % "provided",
+
     resolvers += "Hortonworks Repository" at "http://repo.hortonworks.com/content/repositories/releases/",
-    libraryDependencies += "com.hortonworks" % "shc-core" % "1.1.1-2.1-s_2.11"
-    // libraryDependencies += "com.redislabs" % "spark-redis" % "2.3.0"
+    libraryDependencies += "com.hortonworks" % "shc-core" % "1.1.1-2.1-s_2.11",
+    libraryDependencies += "com.redislabs" % "spark-redis" % "2.3.0"
   ).
   enablePlugins(AssemblyPlugin)
 

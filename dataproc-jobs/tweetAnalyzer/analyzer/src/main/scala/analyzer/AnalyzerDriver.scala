@@ -6,11 +6,8 @@ import org.apache.spark.sql.execution.datasources.hbase.{HBaseRelation, HBaseTab
 import org.apache.spark.sql.expressions.Aggregator;
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-
-// import org.apache.spark.streaming.dstream.InputDStream
-// import org.apache.spark.streaming.{Seconds, StreamingContext}
-
-//import org.apache.spark.rdd.PairRDDFunctions;
+import org.apache.spark.streaming._
+import com.redislabs.provider.redis._
 
 object AnalyzerDriver{
   val catalog =
@@ -38,6 +35,8 @@ object AnalyzerDriver{
     val spark = SparkSession
     .builder()
     .appName("Tweet Analyzer")
+    .config("spark.redis.host", "10.0.0.3")
+    .config("spark.redis.port", "6379")
     .getOrCreate()
 
     val sc = spark.sparkContext
@@ -47,12 +46,15 @@ object AnalyzerDriver{
 
     def getHbaseDataframe(cat: String): DataFrame = {
       val filteredDf = sqlContext
-          .read
-          .options(Map(HBaseTableCatalog.tableCatalog->cat))
-          .format("org.apache.spark.sql.execution.datasources.hbase")
-          .load()
-          .filter($"id" > (batchNum+"_") && $"id" <= (batchNum+"`"))  // ` is after _ in lexicographical order
+                        .read
+                        .options(Map(HBaseTableCatalog.tableCatalog->cat))
+                        .format("org.apache.spark.sql.execution.datasources.hbase")
+                        .load()
+                        .filter($"id" > (batchNum+"_") && $"id" <= (batchNum+"`"))  // ` is after _ in lexicographical order
       
+      // Hbase has some numberical columns that it stores as strings
+      // so casting them into integers for the dataframes
+      // those these counts are currently all zeros for some reason
       filteredDf
         .withColumn("favCountInt", filteredDf("favCount").cast(IntegerType)).drop("favCount").withColumnRenamed("favCountInt", "favCount")
         .withColumn("quoteCountInt", filteredDf("quoteCount").cast(IntegerType)).drop("quoteCount").withColumnRenamed("quoteCountInt", "quoteCount")
@@ -65,9 +67,10 @@ object AnalyzerDriver{
 
     def getCountriesStats() {
       val countriesDf = df.groupBy("country_code", "language")
-                        .agg(count("language").alias("langCount"))
-                        .groupBy("country_code")
-                        .agg(collect_list(struct(col("language"), col("langCount"))).alias("geoJSON"))
+                          .agg(count("language").alias("langCount"))
+                          .groupBy("country_code")
+                          .agg(collect_list(struct(col("language"), col("langCount")))
+                          .alias("geoJSON"))
       countriesDf.show()
     }
     println("Countries and language counts")
@@ -76,13 +79,15 @@ object AnalyzerDriver{
     // each row is a geohash, and a language count
     // ex: eyc7vc: ["en", 2]
     val hashLangs = df.groupBy("geohash", "language")
-              .agg(count("language").alias("langCount"))
+                      .agg(count("language").alias("langCount"))
     println("Geohashes and language counts")
     hashLangs.show()
     
     // each row is a geohash, and a list of languages and their counts
     // ex: eyd68x: [["pt", 1], ["en", 5]]
-    val hashLangsMerged = hashLangs.groupBy("geohash").agg(collect_list(struct(col("language"), col("langCount"))).alias("geoJSON"))
+    val hashLangsMerged = hashLangs.groupBy("geohash")
+                            .agg(collect_list(struct(col("language"), col("langCount")))
+                            .alias("geoJSON"))
     hashLangsMerged.show()
 
     // writing hashes and languages to file
