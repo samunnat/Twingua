@@ -15,3 +15,12 @@
 runtime: nodejs
 env: flex
 # [END gae_quickstart_yaml]
+
+# update with Redis instance details
+env_variables:
+  REDISHOST: "10.0.0.3"
+  REDISPORT: "6379"
+
+# update with Redis instance network name
+network:
+  name: default

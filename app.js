@@ -6,48 +6,12 @@ const app = express();
 var geohash = require("ngeohash");
 
 // Redis initialization
+const REDISHOST = process.env.REDISHOST || "localhost";
+const REDISPORT = process.env.REDISPORT || 6379;
+
 var redis = require("redis");
-var redisClient = redis.createClient();
-// 48.99, 2.11 48.73 2.68
-// var hashes = geohash.bboxes(48.73, 2.11, 48.99, 2.68, (precision = 6));
-
-// // // Testing bounds 'ewt','eww','ewx','ey8',
-// redisClient.zrangebylex("geohash.6", '[{"u09w5a', '[{"u09w5z', (err, reply) => {
-//   if (err) throw err;
-//   console.log('[{\\"uf');
-//   const obj = JSON.parse(reply[0]);
-//   console.log(obj);
-
-//   console.log(
-//     reply.map(jsonStr => {
-//       return JSON.parse(jsonStr);
-//     })
-//   );
-// });
-
-// redisClient.zrange("stats", 0, -1, (err, reply) => {
-//   if (err) throw err;
-//   console.log('[{\\"uf');
-//   console.log(reply);
-// });
-// hashes = ["ewt", "eww", "ewx", "ey8"];
-
-// console.log(redisClient.hgetall("ewt"));
-// console.log(analytics);
-// console.log(hashes);
-// hashes.map((key, i) => {
-//   const obj = {};
-//   obj[key] = {
-//     en: Math.floor(Math.random() * 100),
-//     fr: Math.floor(Math.random() * 100),
-//     ch: Math.floor(Math.random() * 100)
-//   };
-//   const args = ["geohash.6", 0, JSON.stringify(obj)];
-//   redisClient.zadd(args, function(err, response) {
-//     if (err) throw err;
-//     console.log("added " + response + " items.");
-//   });
-// });
+var redisClient = redis.createClient(REDISPORT, REDISHOST);
+// redisClient.on("error", err => console.error("ERR:REDIS:", err));
 
 // Dataproc initialization
 const dataproc = require("@google-cloud/dataproc");
@@ -69,69 +33,69 @@ const gcpClient = new dataproc.v1.JobControllerClient({
 // var analytics = {};
 
 // Every 20 minutes submit a job to query the analytics table and then read the resulting results from a bucket
-setInterval(function() {
-  // Creating job request configuration to run Spark Job
-  const sparkRequest = {
-    projectId: "big-data-project-233100",
-    region: "us-west1",
-    job: {
-      placement: {
-        clusterName: "testcl"
-      },
-      hadoopJob: {
-        args: [
-          "com.twingua.hbase.bulkload.HBaseDriver",
-          `gs://bigdata_tweet_dump/tweets_eu_30.json`,
-          `gs://dataproctst/hfiles/tweets_eu_30`,
-          "tweet"
-        ],
-        mainJarFileUri: "gs://dataproctst/hbase-bulkload-1.0.jar"
-      }
-    }
-  };
+// setInterval(function() {
+//   // Creating job request configuration to run Spark Job
+//   const sparkRequest = {
+//     projectId: "big-data-project-233100",
+//     region: "us-west1",
+//     job: {
+//       placement: {
+//         clusterName: "testcl"
+//       },
+//       hadoopJob: {
+//         args: [
+//           "com.twingua.hbase.bulkload.HBaseDriver",
+//           `gs://bigdata_tweet_dump/tweets_eu_30.json`,
+//           `gs://dataproctst/hfiles/tweets_eu_30`,
+//           "tweet"
+//         ],
+//         mainJarFileUri: "gs://dataproctst/hbase-bulkload-1.0.jar"
+//       }
+//     }
+//   };
 
-  gcpClient.submitJob(sparkRequest).then(responses => {
-    console.log("Job Submitted");
-    const jobId = responses[0].reference.jobId;
+//   gcpClient.submitJob(sparkRequest).then(responses => {
+//     console.log("Job Submitted");
+//     const jobId = responses[0].reference.jobId;
 
-    // Dataproc every 1.5 to see if the job is done
-    const getJobInterval = setInterval(() => {
-      const getJobRequest = {
-        projectId: "big-data-project-233100",
-        region: "us-west1",
-        jobId: jobId
-      };
-      gcpClient.getJob(getJobRequest).then(element => {
-        // doThingsWith(element)
-        console.log("GOT JOB");
-        console.log("JOB STATUS:", element[0].status.state);
-        const jobRunning = element[0].status.state === "RUNNING";
-        console.log("jobRunning:", jobRunning);
-        if (!jobRunning) {
-          clearInterval(getJobInterval);
-          console.log("JOB DONE");
-          // Job is done now, so download results from bucket
-          file.download(function(err, contents) {
-            console.log("downloaded!");
-            if (err !== null) {
-              console.log("ERROR:", err);
-              res.send("failed D:");
-            } else {
-              // Load results from file into memory
-              analytics = JSON.parse(contents.toString());
-              res.send("worked!");
+//     // Dataproc every 1.5 to see if the job is done
+//     const getJobInterval = setInterval(() => {
+//       const getJobRequest = {
+//         projectId: "big-data-project-233100",
+//         region: "us-west1",
+//         jobId: jobId
+//       };
+//       gcpClient.getJob(getJobRequest).then(element => {
+//         // doThingsWith(element)
+//         console.log("GOT JOB");
+//         console.log("JOB STATUS:", element[0].status.state);
+//         const jobRunning = element[0].status.state === "RUNNING";
+//         console.log("jobRunning:", jobRunning);
+//         if (!jobRunning) {
+//           clearInterval(getJobInterval);
+//           console.log("JOB DONE");
+//           // Job is done now, so download results from bucket
+//           file.download(function(err, contents) {
+//             console.log("downloaded!");
+//             if (err !== null) {
+//               console.log("ERROR:", err);
+//               res.send("failed D:");
+//             } else {
+//               // Load results from file into memory
+//               analytics = JSON.parse(contents.toString());
+//               res.send("worked!");
 
-              // Delete file on the bucket since we no longer need it
-              file.delete(function(err, apiResponse) {
-                console.log(err !== null ? apiResponse : err);
-              });
-            }
-          });
-        }
-      });
-    }, 1500);
-  });
-}, 1200000);
+//               // Delete file on the bucket since we no longer need it
+//               file.delete(function(err, apiResponse) {
+//                 console.log(err !== null ? apiResponse : err);
+//               });
+//             }
+//           });
+//         }
+//       });
+//     }, 1500);
+//   });
+// }, 1200000);
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -148,7 +112,7 @@ app.get("/", (req, res) => {
   console.log(Object.keys(req.query).length);
   res
     .status(200)
-    .send("hello world")
+    .send("hello world\n" + redisClient)
     .end();
 });
 
@@ -163,6 +127,11 @@ app.get("/BulkLoad", (req, res) => {
   }
 
   const filename = req.query.filename;
+  const fileNumber = filename.substring(
+    filename.lastIndexOf("_") + 1,
+    filename.length
+  );
+  console.log(Math.floor(fileNumber / 10));
 
   // Creating job request configuration to start BulkLoad
   const dataprocRequest = {
@@ -170,7 +139,6 @@ app.get("/BulkLoad", (req, res) => {
     // https://cloud.google.com/nodejs/docs/reference/dataproc/0.4.x/google.cloud.dataproc.v1#.Job
     projectId: "big-data-project-233100",
     region: "us-west1",
-    requestId: new Date().toJSON(),
     job: {
       placement: {
         clusterName: "testcl"
@@ -180,9 +148,11 @@ app.get("/BulkLoad", (req, res) => {
           "com.twingua.hbase.bulkload.HBaseDriver",
           `gs://bigdata_tweet_dump/${filename}.json`,
           `gs://dataproctst/hfiles/${filename}`,
-          "tweets"
+          "tweets",
+          `${Math.floor(fileNumber / 10)}` // Batch number
         ],
-        mainJarFileUri: "gs://dataproctst/hbase-bulkload-1.0.jar"
+        mainJarFileUri: "gs://dataproctst/hbase-bulkload-1.0.jar",
+        jarFileUris: ["gs://dataproctst/geohash-1.3.0.jar"]
       }
     }
   };
@@ -219,6 +189,8 @@ app.get("/languages", (req, res) => {
     res.status(400).end();
   }
 
+  // Getting bottom left and top right bounding box geohashes
+  // Then using these to get all entries inbetween
   const startHash = geohash.encode(
     req.query.lat1,
     req.query.long1,
@@ -232,11 +204,12 @@ app.get("/languages", (req, res) => {
   );
 
   redisClient.zrangebylex(
-    "geohash.6",
+    `geohash.${req.query.precision}`,
     `[{"${startHash}`,
     `[{"${endHash}z`,
     (err, reply) => {
       if (err) throw err;
+      console.log("redis done");
       res.json(
         reply.map(jsonStr => {
           const geohashObj = JSON.parse(jsonStr);
