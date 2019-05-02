@@ -22,11 +22,12 @@ lazy val root = (project in file(".")).
     // ),
     resolvers += "Hortonworks Repository" at "http://repo.hortonworks.com/content/repositories/releases/",
     libraryDependencies += "com.hortonworks" % "shc-core" % "1.1.1-2.1-s_2.11"
+    // libraryDependencies += "com.redislabs" % "spark-redis" % "2.3.0"
   ).
   enablePlugins(AssemblyPlugin)
 
 artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) => "analyzer.jar" }
 
 // set the main class for 'sbt run'
-mainClass in (Compile, run) := Some("com.twingua.analyzer.Hello")
+mainClass in (Compile, run) := Some("com.twingua.analyzer.AnalyzerDriver")
 // See https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html for instructions on how to publish to Sonatype.

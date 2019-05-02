@@ -1,0 +1,4 @@
+[0m[[0m[31merror[0m] [0m[0m/Users/Aakash/Dropbox/Twingua/Twingua/dataproc-jobs/tweetAnalyzer/analyzer/src/main/scala/analyzer/AnalyzerDriver.scala:67:17: illegal start of simple expression[0m
+[0m[[0m[31merror[0m] [0m[0m    val types = [f.dataType for f in df.schema.fields][0m
+[0m[[0m[31merror[0m] [0m[0m                ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m

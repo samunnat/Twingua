@@ -4,7 +4,7 @@
 		module="analyzer_2.11"
 		revision="0.1.0-SNAPSHOT"
 		status="integration"
-		publication="20190417130601"
+		publication="20190501150425"
 	>
 		<description>
 		analyzer

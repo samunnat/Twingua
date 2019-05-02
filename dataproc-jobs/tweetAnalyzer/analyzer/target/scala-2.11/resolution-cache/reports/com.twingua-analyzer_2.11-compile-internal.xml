@@ -7,7 +7,7 @@
 		revision="0.1.0-SNAPSHOT"
 		conf="compile-internal"
 		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, pom, scala-tool"
-		date="20190417130601"/>
+		date="20190501150425"/>
 	<dependencies>
 		<module organisation="com.github.davidmoten" name="geo">
 			<revision name="0.7.1" status="release" pubdate="20150305181028" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://github.com/davidmoten/geo" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="221">
@@ -79,7 +79,7 @@
 			</revision>
 			<revision name="2.1.1" status="release" pubdate="20170425185058" resolver="public" artresolver="public" evicted="latest-revision" evicted-reason="" homepage="http://spark.apache.org/" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master, default(compile)" position="-1">
 				<license name="Apache 2.0 License" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
-				<metadata-artifact status="successful" details="" size="9885" time="61" location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-sql_2.11/ivy-2.1.1.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-sql_2.11/ivy-2.1.1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/spark/spark-sql_2.11/2.1.1/spark-sql_2.11-2.1.1.pom"/>
+				<metadata-artifact status="successful" details="" size="9885" time="67" location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-sql_2.11/ivy-2.1.1.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-sql_2.11/ivy-2.1.1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/spark/spark-sql_2.11/2.1.1/spark-sql_2.11-2.1.1.pom"/>
 				<evicted-by rev="2.3.2"/>
 				<caller organisation="com.twingua" name="analyzer_2.11" conf="compile-internal, compile, provided, optional" rev="2.3.2" rev-constraint-default="2.3.2" rev-constraint-dynamic="2.3.2" callerrev="0.1.0-SNAPSHOT"/>
 				<caller organisation="com.hortonworks" name="shc-core" conf="default, compile, runtime, master" rev="2.1.1" rev-constraint-default="2.1.1" rev-constraint-dynamic="2.1.1" callerrev="1.1.1-2.1-s_2.11"/>
@@ -657,7 +657,7 @@
 			</revision>
 			<revision name="2.1.1" status="release" pubdate="20170425184805" resolver="public" artresolver="public" homepage="http://spark.apache.org/" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="124">
 				<license name="Apache 2.0 License" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
-				<metadata-artifact status="successful" details="" size="7973" time="89" location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-catalyst_2.11/ivy-2.1.1.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-catalyst_2.11/ivy-2.1.1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/spark/spark-catalyst_2.11/2.1.1/spark-catalyst_2.11-2.1.1.pom"/>
+				<metadata-artifact status="successful" details="" size="7973" time="63" location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-catalyst_2.11/ivy-2.1.1.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-catalyst_2.11/ivy-2.1.1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/spark/spark-catalyst_2.11/2.1.1/spark-catalyst_2.11-2.1.1.pom"/>
 				<caller organisation="com.hortonworks" name="shc-core" conf="default, compile, runtime, master" rev="2.1.1" rev-constraint-default="2.1.1" rev-constraint-dynamic="2.1.1" callerrev="1.1.1-2.1-s_2.11"/>
 				<caller organisation="org.apache.spark" name="spark-sql_2.11" conf="compile, runtime" rev="2.3.2" rev-constraint-default="2.3.2" rev-constraint-dynamic="2.3.2" callerrev="2.3.2"/>
 				<artifacts>
@@ -890,7 +890,7 @@
 			</revision>
 			<revision name="2.1.1" status="release" pubdate="20170425184413" resolver="public" artresolver="public" evicted="latest-revision" evicted-reason="" homepage="http://spark.apache.org/" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master, default(compile)" position="-1">
 				<license name="Apache 2.0 License" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
-				<metadata-artifact status="successful" details="" size="21108" time="111" location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-core_2.11/ivy-2.1.1.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-core_2.11/ivy-2.1.1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/spark/spark-core_2.11/2.1.1/spark-core_2.11-2.1.1.pom"/>
+				<metadata-artifact status="successful" details="" size="21108" time="152" location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-core_2.11/ivy-2.1.1.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-core_2.11/ivy-2.1.1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/spark/spark-core_2.11/2.1.1/spark-core_2.11-2.1.1.pom"/>
 				<evicted-by rev="2.3.2"/>
 				<caller organisation="com.twingua" name="analyzer_2.11" conf="compile-internal, compile, provided, optional" rev="2.3.2" rev-constraint-default="2.3.2" rev-constraint-dynamic="2.3.2" callerrev="0.1.0-SNAPSHOT"/>
 				<caller organisation="org.apache.spark" name="spark-catalyst_2.11" conf="compile, runtime" rev="2.1.1" rev-constraint-default="2.1.1" rev-constraint-dynamic="2.1.1" callerrev="2.1.1"/>
@@ -1202,7 +1202,7 @@
 			</revision>
 			<revision name="2.1.1" status="release" pubdate="20170425184318" resolver="public" artresolver="public" evicted="latest-revision" evicted-reason="" homepage="http://spark.apache.org/" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="-1">
 				<license name="Apache 2.0 License" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
-				<metadata-artifact status="successful" details="" size="4834" time="62" location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-unsafe_2.11/ivy-2.1.1.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-unsafe_2.11/ivy-2.1.1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/spark/spark-unsafe_2.11/2.1.1/spark-unsafe_2.11-2.1.1.pom"/>
+				<metadata-artifact status="successful" details="" size="4834" time="64" location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-unsafe_2.11/ivy-2.1.1.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-unsafe_2.11/ivy-2.1.1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/spark/spark-unsafe_2.11/2.1.1/spark-unsafe_2.11-2.1.1.pom"/>
 				<evicted-by rev="2.3.2"/>
 				<caller organisation="org.apache.spark" name="spark-catalyst_2.11" conf="compile, runtime" rev="2.1.1" rev-constraint-default="2.1.1" rev-constraint-dynamic="2.1.1" callerrev="2.1.1"/>
 				<artifacts>
@@ -1385,7 +1385,7 @@
 			</revision>
 			<revision name="2.1.1" status="release" pubdate="20170425184453" resolver="public" artresolver="public" evicted="latest-revision" evicted-reason="" homepage="http://spark.apache.org/" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="-1">
 				<license name="Apache 2.0 License" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
-				<metadata-artifact status="successful" details="" size="2327" time="384" location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-tags_2.11/ivy-2.1.1.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-tags_2.11/ivy-2.1.1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/spark/spark-tags_2.11/2.1.1/spark-tags_2.11-2.1.1.pom"/>
+				<metadata-artifact status="successful" details="" size="2327" time="1022" location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-tags_2.11/ivy-2.1.1.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.spark/spark-tags_2.11/ivy-2.1.1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/spark/spark-tags_2.11/2.1.1/spark-tags_2.11-2.1.1.pom"/>
 				<evicted-by rev="2.3.2"/>
 				<caller organisation="org.apache.spark" name="spark-catalyst_2.11" conf="compile, runtime" rev="2.1.1" rev-constraint-default="2.1.1" rev-constraint-dynamic="2.1.1" callerrev="2.1.1"/>
 				<artifacts>
@@ -2361,7 +2361,7 @@
 		<module organisation="org.apache.hbase" name="hbase-protocol">
 			<revision name="1.1.3" status="release" pubdate="20160116193132" resolver="public" artresolver="public" homepage="" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="195">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="successful" details="" size="8318" time="68" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-protocol/ivy-1.1.3.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-protocol/ivy-1.1.3.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-protocol/1.1.3/hbase-protocol-1.1.3.pom"/>
+				<metadata-artifact status="successful" details="" size="8318" time="52" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-protocol/ivy-1.1.3.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-protocol/ivy-1.1.3.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-protocol/1.1.3/hbase-protocol-1.1.3.pom"/>
 				<caller organisation="org.apache.phoenix" name="phoenix-core" conf="null, compile, runtime" rev="1.1.3" rev-constraint-default="1.1.3" rev-constraint-dynamic="1.1.3" callerrev="4.9.0-HBase-1.1"/>
 				<caller organisation="org.apache.hbase" name="hbase-server" conf="compile, runtime" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
 				<caller organisation="org.apache.hbase" name="hbase-common" conf="compile, runtime" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
@@ -2375,7 +2375,7 @@
 			</revision>
 			<revision name="1.1.2" status="release" pubdate="20150826211707" resolver="public" artresolver="public" evicted="latest-revision" evicted-reason="" homepage="" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="-1">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="successful" details="" size="8318" time="59" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-protocol/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-protocol/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-protocol/1.1.2/hbase-protocol-1.1.2.pom"/>
+				<metadata-artifact status="successful" details="" size="8318" time="77" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-protocol/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-protocol/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-protocol/1.1.2/hbase-protocol-1.1.2.pom"/>
 				<evicted-by rev="1.1.3"/>
 				<caller organisation="org.apache.hbase" name="hbase-server" conf="compile, runtime" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
 				<caller organisation="org.apache.hbase" name="hbase-common" conf="compile, runtime" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
@@ -2388,7 +2388,7 @@
 		<module organisation="org.apache.hbase" name="hbase-annotations">
 			<revision name="1.1.3" status="release" pubdate="20160116193110" resolver="public" artresolver="public" homepage="" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="194">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="successful" details="" size="1713" time="65" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-annotations/ivy-1.1.3.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-annotations/ivy-1.1.3.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-annotations/1.1.3/hbase-annotations-1.1.3.pom"/>
+				<metadata-artifact status="successful" details="" size="1713" time="90" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-annotations/ivy-1.1.3.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-annotations/ivy-1.1.3.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-annotations/1.1.3/hbase-annotations-1.1.3.pom"/>
 				<caller organisation="org.apache.hbase" name="hbase-protocol" conf="compile" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
 				<caller organisation="org.apache.phoenix" name="phoenix-core" conf="null, compile, runtime" rev="1.1.3" rev-constraint-default="1.1.3" rev-constraint-dynamic="1.1.3" callerrev="4.9.0-HBase-1.1"/>
 				<caller organisation="org.apache.hbase" name="hbase-common" conf="compile, runtime" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
@@ -2402,7 +2402,7 @@
 			</revision>
 			<revision name="1.1.2" status="release" pubdate="20150826211644" resolver="public" artresolver="public" evicted="latest-revision" evicted-reason="" homepage="" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="-1">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="successful" details="" size="1713" time="61" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-annotations/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-annotations/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-annotations/1.1.2/hbase-annotations-1.1.2.pom"/>
+				<metadata-artifact status="successful" details="" size="1713" time="72" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-annotations/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-annotations/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-annotations/1.1.2/hbase-annotations-1.1.2.pom"/>
 				<evicted-by rev="1.1.3"/>
 				<caller organisation="org.apache.hbase" name="hbase-protocol" conf="compile" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
 				<caller organisation="org.apache.hbase" name="hbase-common" conf="compile, runtime" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
@@ -2842,7 +2842,7 @@
 		<module organisation="org.apache.hbase" name="hbase-server">
 			<revision name="1.1.2" status="release" pubdate="20150826211927" resolver="public" artresolver="public" homepage="" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="149">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="successful" details="" size="32070" time="67" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-server/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-server/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-server/1.1.2/hbase-server-1.1.2.pom"/>
+				<metadata-artifact status="successful" details="" size="32070" time="111" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-server/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-server/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-server/1.1.2/hbase-server-1.1.2.pom"/>
 				<caller organisation="com.hortonworks" name="shc-core" conf="default, compile, runtime, master" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.1-2.1-s_2.11"/>
 				<artifacts>
 					<artifact name="hbase-server" type="jar" ext="jar" status="no" details="" size="3978343" time="0" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-server/jars/hbase-server-1.1.2.jar">
@@ -3081,7 +3081,7 @@
 		<module organisation="org.apache.hbase" name="hbase-prefix-tree">
 			<revision name="1.1.2" status="release" pubdate="20150826211820" resolver="public" artresolver="public" homepage="" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="218">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="successful" details="" size="7100" time="71" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-prefix-tree/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-prefix-tree/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-prefix-tree/1.1.2/hbase-prefix-tree-1.1.2.pom"/>
+				<metadata-artifact status="successful" details="" size="7100" time="32" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-prefix-tree/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-prefix-tree/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-prefix-tree/1.1.2/hbase-prefix-tree-1.1.2.pom"/>
 				<caller organisation="org.apache.hbase" name="hbase-server" conf="compile, runtime" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
 				<artifacts>
 					<artifact name="hbase-prefix-tree" type="jar" ext="jar" status="no" details="" size="102096" time="0" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-prefix-tree/jars/hbase-prefix-tree-1.1.2.jar">
@@ -3093,7 +3093,7 @@
 		<module organisation="org.apache.hbase" name="hbase-client">
 			<revision name="1.1.2" status="release" pubdate="20150826211756" resolver="public" artresolver="public" homepage="" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="153">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="successful" details="" size="12089" time="89" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-client/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-client/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-client/1.1.2/hbase-client-1.1.2.pom"/>
+				<metadata-artifact status="successful" details="" size="12089" time="79" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-client/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-client/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-client/1.1.2/hbase-client-1.1.2.pom"/>
 				<caller organisation="org.apache.hbase" name="hbase-server" conf="compile, runtime" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
 				<artifacts>
 					<artifact name="hbase-client" type="jar" ext="jar" status="no" details="" size="1249004" time="0" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-client/jars/hbase-client-1.1.2.jar">
@@ -3208,7 +3208,7 @@
 		<module organisation="org.apache.hbase" name="hbase-procedure">
 			<revision name="1.1.2" status="release" pubdate="20150826211738" resolver="public" artresolver="public" homepage="" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="152">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="successful" details="" size="5649" time="75" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-procedure/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-procedure/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-procedure/1.1.2/hbase-procedure-1.1.2.pom"/>
+				<metadata-artifact status="successful" details="" size="5649" time="84" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-procedure/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-procedure/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-procedure/1.1.2/hbase-procedure-1.1.2.pom"/>
 				<caller organisation="org.apache.hbase" name="hbase-server" conf="compile, runtime" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.2"/>
 				<artifacts>
 					<artifact name="hbase-procedure" type="jar" ext="jar" status="no" details="" size="103315" time="0" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-procedure/jars/hbase-procedure-1.1.2.jar">
@@ -3220,7 +3220,7 @@
 		<module organisation="org.apache.hbase" name="hbase-common">
 			<revision name="1.1.2" status="release" pubdate="20150826211730" resolver="public" artresolver="public" homepage="" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="169">
 				<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="successful" details="" size="15975" time="78" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-common/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-common/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-common/1.1.2/hbase-common-1.1.2.pom"/>
+				<metadata-artifact status="successful" details="" size="15975" time="75" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-common/ivy-1.1.2.xml" searched="true" original-local-location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-common/ivy-1.1.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/apache/hbase/hbase-common/1.1.2/hbase-common-1.1.2.pom"/>
 				<caller organisation="com.hortonworks" name="shc-core" conf="default, compile, runtime, master" rev="1.1.2" rev-constraint-default="1.1.2" rev-constraint-dynamic="1.1.2" callerrev="1.1.1-2.1-s_2.11"/>
 				<artifacts>
 					<artifact name="hbase-common" type="jar" ext="jar" status="no" details="" size="530078" time="0" location="/Users/Aakash/.ivy2/cache/org.apache.hbase/hbase-common/jars/hbase-common-1.1.2.jar">
