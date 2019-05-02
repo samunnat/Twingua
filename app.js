@@ -1,6 +1,19 @@
-const request = require("request");
 const express = require("express");
 const app = express();
+const cors = require("cors"); // middleware to deal with cors
+
+const http = require("http");
+var server = http.createServer(app);
+const socketIO = require("socket.io");
+var io = socketIO(server);
+
+// only use this for dev purposes
+const whitelist = ["http://localhost:3000"];
+app.use(
+  cors({
+    origin: whitelist
+  })
+);
 
 // Geo hash initializaiton
 var geohash = require("ngeohash");
@@ -22,15 +35,13 @@ const storage = new Storage();
 const bucket = storage.bucket("bigdata_tweet_dump");
 const file = bucket.file("tweets_52_copy_ryan.json");
 
-// Creating GCP Client with service worker credentials
-const credentials = require("/Users/Ryan_Loi/Downloads/big-data-project-233100-e78608d5e4c9.json");
-const gcpClient = new dataproc.v1.JobControllerClient({
-  credentials: credentials, // Need to put actual credentials object in when pushing
-  // optional auth parameters.
-  servicePath: "us-west1-dataproc.googleapis.com"
-});
-
-// var analytics = {};
+// // Creating GCP Client with service worker credentials
+// const credentials = require("/Users/Ryan_Loi/Downloads/big-data-project-233100-e78608d5e4c9.json");
+// const gcpClient = new dataproc.v1.JobControllerClient({
+//   credentials: credentials, // Need to put actual credentials object in when pushing
+//   // optional auth parameters.
+//   servicePath: "us-west1-dataproc.googleapis.com"
+// });
 
 // Every 20 minutes submit a job to query the analytics table and then read the resulting results from a bucket
 // setInterval(function() {
@@ -96,15 +107,6 @@ const gcpClient = new dataproc.v1.JobControllerClient({
 //     }, 1500);
 //   });
 // }, 1200000);
-
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
 
 // Homepage Route
 app.get("/", (req, res) => {
@@ -224,8 +226,26 @@ app.get("/languages", (req, res) => {
   );
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
-  console.log("Press Ctrl+C to quit.");
+// Socket connection established
+io.on("connection", socket => {
+  console.log("A user has connected");
+
+  socket.on("get-languages", hi => {
+    console.log(hi);
+    socket.emit("return-languages");
+  });
+
+  // User has disconnected, add clean up here
+  socket.on("disconnect", () => {
+    console.log("A user has left");
+  });
 });
+
+const PORT = process.env.PORT || 4000;
+// app.listen(PORT, () => {
+//   console.log(`App listening on port ${PORT}`);
+//   console.log("Press Ctrl+C to quit.");
+// });
+
+// app.listen does not let socket.io listen receive requests
+server.listen(PORT, "localhost");
