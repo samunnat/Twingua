@@ -1,7 +1,7 @@
 package com.twingua.analyzer
 
 import com.github.davidmoten.geo.GeoHash
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.apache.spark.sql.execution.datasources.hbase.{HBaseRelation, HBaseTableCatalog}
 import org.apache.spark.sql.expressions.Aggregator;
 import org.apache.spark.sql.functions._
@@ -53,8 +53,8 @@ object AnalyzerDriver{
                         .filter($"id" > (batchNum+"_") && $"id" <= (batchNum+"`"))  // ` is after _ in lexicographical order
       
       // Hbase has some numberical columns that it stores as strings
-      // so casting them into integers for the dataframes
-      // those these counts are currently all zeros for some reason
+      // so casting them into integers in the dataframe
+      // though these counts are currently all zeros in the hbase "tweets" table for some reason
       filteredDf
         .withColumn("favCountInt", filteredDf("favCount").cast(IntegerType)).drop("favCount").withColumnRenamed("favCountInt", "favCount")
         .withColumn("quoteCountInt", filteredDf("quoteCount").cast(IntegerType)).drop("quoteCount").withColumnRenamed("quoteCountInt", "quoteCount")
@@ -65,30 +65,62 @@ object AnalyzerDriver{
     val df = getHbaseDataframe(catalog)
     df.show()
 
-    def getCountriesStats() {
+    def getCountriesStats() = {
       val countriesDf = df.groupBy("country_code", "language")
                           .agg(count("language").alias("langCount"))
                           .groupBy("country_code")
-                          .agg(collect_list(struct(col("language"), col("langCount")))
+                          .agg(collect_set(struct(col("language"), col("langCount")))
                           .alias("geoJSON"))
       countriesDf.show()
     }
+
     println("Countries and language counts")
     getCountriesStats()
 
-    // each row is a geohash, and a language count
-    // ex: eyc7vc: ["en", 2]
-    val hashLangs = df.groupBy("geohash", "language")
-                      .agg(count("language").alias("langCount"))
-    println("Geohashes and language counts")
-    hashLangs.show()
+    def getHashLangsMergedWithPrecision( precision: Int ): DataFrame = {
+      precision match {
+        case i if i >= 3 && i < 6 => {
+          df.select(col("*"), substring(col("geohash"), 0, precision).as("subGeohash"))
+                    .groupBy("subGeohash", "language")
+                    .agg(
+                      count("language").alias("langCount")
+                    )
+                    .groupBy("subGeohash")
+                    .agg(collect_set(struct(col("language"), col("langCount")))
+                    .alias("geoJSON"))
+        }
+        case 6 | _ =>  {
+          df.groupBy("geohash", "language")
+            .agg(
+              count("language").alias("langCount")
+            )
+            .groupBy("geohash")
+            .agg(collect_set(struct(col("language"), col("langCount")))
+            .alias("geoJSON"))
+        }
+      }
+    }
     
     // each row is a geohash, and a list of languages and their counts
     // ex: eyd68x: [["pt", 1], ["en", 5]]
-    val hashLangsMerged = hashLangs.groupBy("geohash")
-                            .agg(collect_list(struct(col("language"), col("langCount")))
-                            .alias("geoJSON"))
-    hashLangsMerged.show()
+    val hexash = getHashLangsMergedWithPrecision(6)
+    hexash.show()
+
+    // val pentash = getHashLangsMergedWithPrecision(5)
+    // pentash.show()
+
+    // val quartash = getHashLangsMergedWithPrecision(4)
+    // quartash.show()
+
+    // val triash = getHashLangsMergedWithPrecision(1)
+    // triash.show()
+
+    // 
+    hexash.write
+              .format("org.apache.spark.sql.redis")
+              .option("table", "hexash")
+              .mode(SaveMode.Append)
+              .save()
 
     // writing hashes and languages to file
     // coalesce(1) is merging all partitions of dataframe into one, so only 1 file is written

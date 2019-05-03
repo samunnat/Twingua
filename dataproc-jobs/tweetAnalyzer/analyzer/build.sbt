@@ -18,7 +18,12 @@ lazy val root = (project in file(".")).
 
     resolvers += "Hortonworks Repository" at "http://repo.hortonworks.com/content/repositories/releases/",
     libraryDependencies += "com.hortonworks" % "shc-core" % "1.1.1-2.1-s_2.11",
-    libraryDependencies += "com.redislabs" % "spark-redis" % "2.3.0"
+    
+    libraryDependencies += "RedisLabs" % "spark-redis" % "0.3.2" from "https://dl.bintray.com/spark-packages/maven/RedisLabs/spark-redis/0.3.2/spark-redis-0.3.2.jar",
+    libraryDependencies += "redis.clients" % "jedis" % "2.9.0",
+    libraryDependencies += "org.apache.commons" % "commons-pool2" % "2.0"
+    // libraryDependencies += "redis.clients" % "jedis" % "2.7.2",
+    // libraryDependencies += "org.apache.commons" % "commons-pool2" % "2.0"
   ).
   enablePlugins(AssemblyPlugin)
 

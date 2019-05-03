@@ -16,4 +16,4 @@ sbt compile
 
 sbt package
 
-gcloud dataproc jobs submit spark --cluster testcl --region us-west1 --jar target/scala-2.11/analyzer.jar --jars gs://dataproctst/shc-core-1.1.1-2.1-s_2.11.jar,gs://dataproctst/spark-redis-2.3.0.jar -- $1
+gcloud dataproc jobs submit spark --cluster testcl --region us-west1 --jar target/scala-2.11/analyzer.jar --jars gs://dataproctst/shc-core-1.1.1-2.1-s_2.11.jar,gs://dataproctst/jedis-2.9.0.jar,gs://dataproctst/commons-pool2-2.0.jar -- $1
