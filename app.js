@@ -35,13 +35,37 @@ const storage = new Storage();
 const bucket = storage.bucket("bigdata_tweet_dump");
 const file = bucket.file("tweets_52_copy_ryan.json");
 
-// // Creating GCP Client with service worker credentials
-// const credentials = require("/Users/Ryan_Loi/Downloads/big-data-project-233100-e78608d5e4c9.json");
-// const gcpClient = new dataproc.v1.JobControllerClient({
-//   credentials: credentials, // Need to put actual credentials object in when pushing
-//   // optional auth parameters.
-//   servicePath: "us-west1-dataproc.googleapis.com"
+// TEMPORARY CODE TO FILL REDIS
+// var hashes6 = geohash.bboxes(
+//   52.148658716048985,
+//   -0.8747863769531251,
+//   52.88321993103792,
+//   0.6097412109375001,
+//   (precision = 6)
+// );
+// console.log(hashes6);
+
+// hashes6.map((key, i) => {
+//   const obj = {};
+//   obj[key] = {
+//     en: Math.floor(Math.random() * 100),
+//     fr: Math.floor(Math.random() * 100),
+//     ch: Math.floor(Math.random() * 100)
+//   };
+//   const args = ["geohash.6", 0, JSON.stringify(obj)];
+//   redisClient.zadd(args, function(err, response) {
+//     if (err) throw err;
+//     console.log("added " + response + " items.");
+//   });
 // });
+
+// Creating GCP Client with service worker credentials
+const credentials = require("/Users/Ryan_Loi/Downloads/big-data-project-233100-e78608d5e4c9.json");
+const gcpClient = new dataproc.v1.JobControllerClient({
+  credentials: credentials, // Need to put actual credentials object in when pushing
+  // optional auth parameters.
+  servicePath: "us-west1-dataproc.googleapis.com"
+});
 
 // Every 20 minutes submit a job to query the analytics table and then read the resulting results from a bucket
 // setInterval(function() {
@@ -230,9 +254,119 @@ app.get("/languages", (req, res) => {
 io.on("connection", socket => {
   console.log("A user has connected");
 
-  socket.on("get-languages", hi => {
-    console.log(hi);
-    socket.emit("return-languages");
+  // Take in the bouunding box from user and stream back the redis query results
+  socket.on("get-languages", (SW, NE, precision, doClear, debug) => {
+    console.log("languages socket called");
+    console.log(debug);
+    console.log(SW);
+    console.log(NE);
+    // Getting bottom left and top right bounding box geohashes
+    // Then using these to get all entries inbetween
+    const startHash = geohash.encode(SW.lat, SW.lng, precision);
+
+    const endHash = geohash.encode(NE.lat, NE.lng, precision);
+    console.log(startHash);
+    console.log(endHash);
+    console.log("\n");
+    redisClient.zrangebylex(
+      `geohash.${precision}`,
+      `[{"${startHash}`,
+      `[{"${endHash}z`, // added z to grab everything with endhash as a prefix
+      (err, reply) => {
+        if (err) throw err;
+        console.log("redis done");
+        // console.log(reply);
+        socket.emit(
+          "return-languages",
+          reply.map(jsonStr => {
+            const geohashObj = JSON.parse(jsonStr);
+            const hashKey = Object.keys(geohashObj)[0];
+            const boxStr = geohash.decode_bbox(hashKey);
+            const obj = {};
+            obj[boxStr] = geohashObj[hashKey];
+            return obj;
+          }),
+          doClear,
+          debug
+        );
+      }
+    );
+  });
+
+  socket.on("get-languages-slice", (SW, NE, precision, doClear, debug) => {
+    console.log("languages slice socket called");
+    console.log(debug);
+    console.log(SW);
+    console.log(NE);
+    // Getting bottom left and top right bounding box geohashes
+    // Then using these to get all entries inbetween
+    const minLat = Math.min(SW.lat, NE.lat);
+    const maxLat = Math.max(SW.lat, NE.lat);
+    const minLng = Math.min(SW.lng, NE.lng);
+    const maxLng = Math.max(SW.lng, NE.lng);
+
+    const bboxHashes = geohash.bboxes(
+      minLat,
+      minLng,
+      maxLat,
+      maxLng,
+      precision
+    );
+
+    console.log(bboxHashes);
+
+    bboxHashes.forEach(hash => {
+      redisClient.zrangebylex(
+        `geohash.${precision}`,
+        `[{"${hash}`,
+        `[{"${hash}1`, // added 1 to grab just the one element with the prefix
+        (err, reply) => {
+          if (err) throw err;
+          if (reply.length == 0) {
+            return;
+          }
+
+          console.log("redis done");
+          console.log(reply);
+          socket.emit(
+            "return-languages",
+            reply.map(jsonStr => {
+              const geohashObj = JSON.parse(jsonStr);
+              const hashKey = Object.keys(geohashObj)[0];
+              const boxStr = geohash.decode_bbox(hashKey);
+              const obj = {};
+              obj[boxStr] = geohashObj[hashKey];
+              return obj;
+            }),
+            doClear,
+            debug
+          );
+        }
+      );
+    });
+    // redisClient.zrangebylex(
+    //   `geohash.${precision}`,
+    //   `[{"${startHash}`,
+    //   `[{"${endHash}z`, // added z to grab everything with endhash as a prefix
+    //   (err, reply) => {
+    //     if (err) throw err;
+    //     console.log("redis done");
+    //     console.log(reply);
+    //     socket.emit(
+    //       "return-languages",
+    //       reply.map(jsonStr => {
+    //         const geohashObj = JSON.parse(jsonStr);
+    //         const hashKey = Object.keys(geohashObj)[0];
+    //         const boxStr = geohash.decode_bbox(hashKey);
+    //         const obj = {};
+    //         obj[boxStr] = geohashObj[hashKey];
+    //         return obj;
+    //       }),
+    //       doClear,
+    //       debug
+    //     );
+    //   }
+    // );
   });
 
   // User has disconnected, add clean up here
