@@ -151,7 +151,6 @@ const styles = {
   }
 };
 
-
 class App extends Component {
   state = {
     mobileOpen: false
@@ -160,28 +159,28 @@ class App extends Component {
   handleDrawerToggle = () => {
     this.setState(state => ({ mobileOpen: !state.mobileOpen }));
   };
-  
+
   render() {
     const { classes } = this.props;
 
     return (
       <MuiThemeProvider theme={theme}>
-      <div className="App">
-      <Hidden smUp implementation="js">
-          <Navigator
-            PaperProps={{ style: { width: "30vw", height: "100vh" } }}
-            variant="temporary"
-            open={this.state.mobileOpen}
-            onClose={this.handleDrawerToggle}
-          />
-      </Hidden>
-            <Hidden xsDown implementation="css">
-              <Navigator PaperProps={{ style: { width: drawerWidth } }} />
-            </Hidden>
-        <div className={classes.appContent}>
-          <Map />
-        </div> 
-      </div>
+        <div className="App">
+          <Hidden smUp implementation="js">
+            <Navigator
+              PaperProps={{ style: { width: "30vw", height: "100vh" } }}
+              variant="temporary"
+              open={this.state.mobileOpen}
+              onClose={this.handleDrawerToggle}
+            />
+          </Hidden>
+          <Hidden xsDown implementation="css">
+            <Navigator PaperProps={{ style: { width: drawerWidth } }} />
+          </Hidden>
+          <div className={classes.appContent}>
+            <Map />
+          </div>
+        </div>
       </MuiThemeProvider>
     );
   }
