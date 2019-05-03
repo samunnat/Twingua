@@ -111,6 +111,19 @@ class Map extends React.Component {
     this.loadedCoords = this.map.getBounds();
     console.log(this.loadedCoords);
     this.prevPrecision = 6;
+    this.prevZoom = defaultZoom;
+
+    // Load the data onto the starting view
+    const SW = {
+      lat: this.loadedCoords._southWest.lat,
+      lng: this.loadedCoords._southWest.lng
+    };
+    const NE = {
+      lat: this.loadedCoords._northEast.lat,
+      lng: this.loadedCoords._northEast.lng
+    };
+
+    this.socket.emit("get-languages", SW, NE, this.prevPrecision, true);
 
     // Map zoom handler
     this.map.on("moveend", this.mapViewChangeHandler); // This handles moving and zoom
@@ -153,7 +166,6 @@ class Map extends React.Component {
   // Function that handles map view changes
   mapViewChangeHandler = e => {
     // Call API to query bounding box information
-    console.log(this.map._layers);
     var precision;
     switch (e.target._zoom) {
       case 4:
@@ -172,8 +184,12 @@ class Map extends React.Component {
 
     const bounds = this.map.getBounds();
     // Checking what change occurred
-    if (this.prevPrecision === precision) {
-      // View shifted: Could have been a zoom or drag
+    if (
+      this.prevPrecision === precision &&
+      this.prevZoom === e.target._zoom &&
+      Object.keys(this.map._layers).length <= 20000 // Limit to 20,000 boxes before clearing
+    ) {
+      // View shifted: screen dragged
       const SW1 = {
         lat: this.loadedCoords._southWest.lat,
         lng: this.loadedCoords._southWest.lng
@@ -279,7 +295,6 @@ class Map extends React.Component {
       }
 
       this.loadedCoords = bounds;
-      console.log(this.loadedCoords);
     } else {
       // Precision changed. Need to clear map and load in new bbox data
       // NOTE: The map is cleared once the socket event 'addPolygons' is called
@@ -295,16 +310,6 @@ class Map extends React.Component {
       this.loadedCoords = bounds;
       this.socket.emit("get-languages", SW, NE, precision, true);
     }
-
-    // console.log(bounds);
-
-    console.log("Zoom level: " + e.target._zoom);
-
-    // // Splitting and reformatting bounds object
-    // const SW = { lat: bounds._southWest.lat, lng: bounds._southWest.lng };
-    // const NE = { lat: bounds._northEast.lat, lng: bounds._northEast.lng };
-
-    // this.socket.emit("get-languages", SW, NE, precision);
   };
 
   // Function to clear all layers on the leaflet map
