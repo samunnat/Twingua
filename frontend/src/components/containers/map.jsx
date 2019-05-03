@@ -69,7 +69,8 @@ class Map extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      radioValue: "label"
+      radioValue: "label",
+      data: {}
     };
   }
 
@@ -120,7 +121,7 @@ class Map extends React.Component {
     if (doClear) {
       this.clearMap();
     }
-    console.log(data);
+    // this.setState({})
     data.forEach(bboxData => {
       const key = Object.keys(bboxData)[0];
       const coords = key.split(",").map(ele => parseFloat(ele));
