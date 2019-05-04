@@ -1,43 +1,6 @@
 import * as React from "react";
 import {stylesListToClassNames} from "../../lib/utils";
 
-const languages = {
-    en: "English",
-    ar: "Arabic",
-    bn: "Bengali",
-    cs: "Czech",
-    da: "Danish",
-    de: "German",
-    el: "Greek",
-    es: "Spanish",
-    fa: "Persian",
-    fi: "Finnish",
-    fil: "Filipino",
-    fr: "French",
-    he: "Hebrew",
-    hi: "Hindi",
-    hu: "Hungarian",
-    id: "Indonesian",
-    it: "Italian",
-    ja: "Japanese",
-    ko: "Korean",
-    msa: "Malay",
-    nl: "Dutch",
-    no: "Norwegian",
-    pl: "Polish",
-    pt: "Portuguese",
-    ro: "Romanian",
-    ru: "Russian",
-    sv: "Swedish",
-    th: "Thai",
-    tr: "Turkish",
-    uk: "Ukrainian",
-    ur: "Urdu",
-    vi: "Vietnamese",
-    "zh-cn": "Chinese (Simplified)",
-    "zh-tw": "Chinese (Traditional)",
-};
-
 const classes = stylesListToClassNames({
     container: {
         top: 10,
@@ -87,7 +50,7 @@ class Legend extends React.Component {
             itemList.push(
                 <React.Fragment key={langKey}>
                     <i className={classes.legendColor} style={{background: colors[langKey]}} />
-                    {languages[langKey]}
+                    {this.props.langKeyToStr[langKey]}
                     <br />
                 </React.Fragment>
             );
@@ -100,11 +63,7 @@ class Legend extends React.Component {
         return (
             <div className={classes.container}>
                 <div className={classes.info}>
-                    {this.state.minimized
-                        ? {
-                              /* <React.Fragment /> */
-                          }
-                        : this.createLegendList(this.props.langColors)}
+                    {this.state.minimized ? <React.Fragment /> : this.createLegendList(this.props.langColors)}
                     <div className={classes.showHideButton} id="legend-min" onClick={() => this.setState({minimized: !this.state.minimized})}>
                         {this.state.minimized ? <i className="fas fa-expand" /> : <i className="far fa-window-minimize" />}
                     </div>

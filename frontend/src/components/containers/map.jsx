@@ -1,8 +1,9 @@
 import * as React from "react";
 import Leaflet from "leaflet";
-import RadioButton from "../atoms/radioButton.jsx";
 import socketIO from "socket.io-client";
 import Hidden from "@material-ui/core/Hidden";
+import * as d3Select from "d3-selection";
+import RadioButton from "../atoms/radioButton.jsx";
 import Navigator from "./Navigator";
 import Legend from "./legend.jsx";
 import {stylesListToClassNames} from "../../lib/utils";
@@ -27,6 +28,43 @@ const classes = stylesListToClassNames({
         left: "1%",
     },
 });
+
+const langKeyToStr = {
+    en: "English",
+    ar: "Arabic",
+    bn: "Bengali",
+    cs: "Czech",
+    da: "Danish",
+    de: "German",
+    el: "Greek",
+    es: "Spanish",
+    fa: "Persian",
+    fi: "Finnish",
+    fil: "Filipino",
+    fr: "French",
+    he: "Hebrew",
+    hi: "Hindi",
+    hu: "Hungarian",
+    id: "Indonesian",
+    it: "Italian",
+    ja: "Japanese",
+    ko: "Korean",
+    msa: "Malay",
+    nl: "Dutch",
+    no: "Norwegian",
+    pl: "Polish",
+    pt: "Portuguese",
+    ro: "Romanian",
+    ru: "Russian",
+    sv: "Swedish",
+    th: "Thai",
+    tr: "Turkish",
+    uk: "Ukrainian",
+    ur: "Urdu",
+    vi: "Vietnamese",
+    "zh-cn": "Chinese (Simplified)",
+    "zh-tw": "Chinese (Traditional)",
+};
 
 const colors = {
     en: "#BB0A21",
@@ -78,7 +116,9 @@ class Map extends React.Component {
         const defaultZoom = 11; //5; remember to change default precision below
 
         // Creating socket to retrieve bounding box data
-        this.socket = socketIO("http://localhost:4000");
+        this.socket = socketIO("http://34.83.68.81:3000/");
+
+        // this.socket = socketIO("http://localhost:4000");
         this.socket.on("return-languages", this.addPolygons);
 
         // Creating the map
@@ -103,9 +143,11 @@ class Map extends React.Component {
 
         // Variables to keep track of map status
         this.loadedCoords = this.map.getBounds();
-        console.log(this.loadedCoords);
         this.prevPrecision = 6;
         this.prevZoom = defaultZoom;
+
+        // var svg = d3Select.select(this.map.getPanes().overlayPane).append("svg"),
+        //     g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
         // Load the data onto the starting view
         const SW = {
@@ -141,6 +183,10 @@ class Map extends React.Component {
             });
 
             if (maxLang[1] !== -1) {
+                if (colors[maxLang[0].replace(/"/g, "")] === undefined) {
+                    // Some tweet's language cannot be indentified
+                    return;
+                }
                 Leaflet.rectangle(
                     [
                         [coords[0], coords[1]], // lat1, long1
@@ -149,10 +195,12 @@ class Map extends React.Component {
                         [coords[2], coords[1]], // lat2, long1
                     ],
                     {
-                        color: colors[maxLang[0]],
+                        color: colors[maxLang[0].replace(/"/g, "")],
                         fillOpacity: 0.1,
                     }
-                ).addTo(this.map);
+                )
+                    .bindTooltip(langKeyToStr[maxLang[0].replace(/"/g, "")])
+                    .addTo(this.map);
             }
         });
     };
@@ -205,7 +253,6 @@ class Map extends React.Component {
             // Finding slices that we have not loaded yet
             if (NE2.lat > NE1.lat) {
                 // There is top slice to load
-                console.log("load top slice");
                 const sliceSW = {
                     lat: NE1.lat,
                     lng: SW2.lng,
@@ -220,7 +267,6 @@ class Map extends React.Component {
 
             if (SW2.lat < SW1.lat) {
                 // There is a bottom slice to load
-                console.log("load bottom slice");
                 const sliceSW = {
                     lat: SW2.lat,
                     lng: SW2.lng,
@@ -234,7 +280,6 @@ class Map extends React.Component {
 
             if (NE2.lng > NE1.lng) {
                 // There is a right slice to load
-                console.log("load right slice");
                 const sliceSW = {
                     lat: Math.max(SW1.lat, SW2.lat),
                     lng: NE1.lng,
@@ -248,7 +293,6 @@ class Map extends React.Component {
 
             if (SW2.lng < SW1.lng) {
                 // There is a left slice to load
-                console.log("load left slice");
                 const sliceSW = {
                     lat: Math.max(SW2.lat, SW1.lat),
                     lng: SW2.lng,
@@ -324,7 +368,7 @@ class Map extends React.Component {
                 <Hidden xsDown implementation="css">
                     <Navigator PaperProps={{style: {width: drawerWidth}}} />
                 </Hidden>
-                <Legend langColors={colors} />
+                <Legend langColors={colors} langKeyToStr={langKeyToStr} />
             </React.Fragment>
         );
     }
