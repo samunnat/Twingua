@@ -117,7 +117,6 @@ class Map extends React.Component {
 
         // Creating socket to retrieve bounding box data
         this.socket = socketIO("http://34.83.68.81/");
-
         // this.socket = socketIO("http://localhost:4000");
         this.socket.on("return-languages", this.addPolygons);
 
@@ -167,11 +166,15 @@ class Map extends React.Component {
 
     // Callback socketio function that takes the bbox data and adds them as polygons to the map
     addPolygons = (data, doClear) => {
+        // NOTE: For some reason the 'slice' return is calling this twice when we are at the default zoom level
         if (doClear) {
             this.clearMap();
+            this.setState({data: data});
+        } else {
+            this.setState({data: [...this.state.data, data]});
         }
 
-        data.forEach((bboxData) => {
+        data.forEach((bboxData, i) => {
             const key = Object.keys(bboxData)[0];
             const coords = key.split(",").map((ele) => parseFloat(ele));
             const languages = Object.keys(bboxData[key]);
@@ -366,7 +369,7 @@ class Map extends React.Component {
                 </div>
                 <div id="map" className={classes.map} />
                 <Hidden xsDown implementation="css">
-                    <Navigator PaperProps={{style: {width: drawerWidth}}} />
+                    <Navigator PaperProps={{style: {width: drawerWidth}}} data={this.state.data} />
                 </Hidden>
                 <Legend langColors={colors} langKeyToStr={langKeyToStr} />
             </React.Fragment>
