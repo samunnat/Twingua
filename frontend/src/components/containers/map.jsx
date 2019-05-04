@@ -116,7 +116,7 @@ class Map extends React.Component {
         const defaultZoom = 11; //5; remember to change default precision below
 
         // Creating socket to retrieve bounding box data
-        this.socket = socketIO("http://34.83.68.81/");
+        this.socket = socketIO("http://34.83.68.81:3000");
         // this.socket = socketIO("http://localhost:4000");
         this.socket.on("return-languages", this.addPolygons);
 
@@ -139,6 +139,13 @@ class Map extends React.Component {
             zoom: defaultZoom,
             layers: [this.layers.labels],
         });
+
+        // Changing the position of the +/- buttons
+        Leaflet.control
+            .zoom({
+                position: "bottomright",
+            })
+            .addTo(this.map);
 
         // Variables to keep track of map status
         this.loadedCoords = this.map.getBounds();
@@ -180,7 +187,7 @@ class Map extends React.Component {
             const languages = Object.keys(bboxData[key]);
             var maxLang = [-1, -1];
             languages.forEach((langKey) => {
-                if (bboxData[key][langKey] > maxLang[1]) {
+                if (bboxData[key][langKey] > maxLang[1] && langKey !== `"en"`) {
                     maxLang = [langKey, bboxData[key][langKey]];
                 }
             });
