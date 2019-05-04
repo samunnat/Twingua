@@ -27,6 +27,13 @@ object AnalyzerDriver{
       |}
     |}""".stripMargin
   
+    // The schema is encoded in a string
+  val schemaString = ""
+
+  // Generate the schema based on the string of schema
+  // val fields = schemaString.split(" ")
+  //   .map(fieldName => StructField(fieldName, StringType, nullable = true))
+  // val analyticsSchema = StructType(fields)
 
   def main(args: Array[String]) {
 
@@ -67,38 +74,37 @@ object AnalyzerDriver{
 
     def getCountriesStats() = {
       val countriesDf = df.groupBy("country_code", "language")
-                          .agg(count("language").alias("langCount"))
+                          .agg(
+                            count("language").alias("langCount")
+                          )
                           .groupBy("country_code")
-                          .agg(collect_set(struct(col("language"), col("langCount")))
-                          .alias("geoJSON"))
+                          .agg(collect_set(struct(col("language"), col("langCount"))).alias("geoJSON"))
       countriesDf.show()
     }
 
-    println("Countries and language counts")
-    getCountriesStats()
+    // println("Countries and language counts")
+    // getCountriesStats()
 
     def getHashLangsMergedWithPrecision( precision: Int ): DataFrame = {
       precision match {
         case i if i >= 3 && i < 6 => {
-          df.select(col("*"), substring(col("geohash"), 0, precision).as("subGeohash"))
-                    .groupBy("subGeohash", "language")
-                    .agg(
-                      count("language").alias("langCount")
-                    )
-                    .groupBy("subGeohash")
-                    .agg(collect_set(struct(col("language"), col("langCount")))
-                    .alias("geoJSON"))
+          df.withColumn("subHash", substring($"geohash", 0, precision))
+            .stat.crosstab("subHash", "language").withColumnRenamed("subhash_language", "geo")
         }
         case 6 | _ =>  {
-          df.groupBy("geohash", "language")
-            .agg(
-              count("language").alias("langCount")
-            )
-            .groupBy("geohash")
-            .agg(collect_set(struct(col("language"), col("langCount")))
-            .alias("geoJSON"))
+          df.stat.crosstab("geohash", "language").withColumnRenamed("geohash_language", "geo")
         }
       }
+    }
+
+    def getJsonRDD( dataFr: DataFrame ) = {
+      dataFr.select(col("geo"), to_json(struct(dataFr.drop("geo").col("*"))))
+            .map( 
+              row => (
+                      "{" + "\"" + row.getString(0) + "\"" + ":" + row.getString(1) + "}", 
+                      "0"   // sorted-set-score -> will be converted to double by spark-redis library later
+                    ) 
+            ).rdd
     }
     
     // each row is a geohash, and a list of languages and their counts
@@ -106,21 +112,20 @@ object AnalyzerDriver{
     val hexash = getHashLangsMergedWithPrecision(6)
     hexash.show()
 
-    // val pentash = getHashLangsMergedWithPrecision(5)
-    // pentash.show()
+    val hexashrdd = getJsonRDD(hexash)
+    sc.toRedisZSET(hexashrdd, "geohash.6")
 
-    // val quartash = getHashLangsMergedWithPrecision(4)
-    // quartash.show()
+    val pentash = getHashLangsMergedWithPrecision(5)
+    pentash.show()
 
-    // val triash = getHashLangsMergedWithPrecision(1)
-    // triash.show()
+    val quartash = getHashLangsMergedWithPrecision(4)
+    quartash.show()
 
-    // 
-    hexash.write
-              .format("org.apache.spark.sql.redis")
-              .option("table", "hexash")
-              .mode(SaveMode.Append)
-              .save()
+    val triash = getHashLangsMergedWithPrecision(3)
+    triash.show()
+
+    val triashrdd = getJsonRDD(triash)
+    sc.toRedisZSET(triashrdd, "geohash.3")
 
     // writing hashes and languages to file
     // coalesce(1) is merging all partitions of dataframe into one, so only 1 file is written

@@ -19,16 +19,20 @@ lazy val root = (project in file(".")).
     resolvers += "Hortonworks Repository" at "http://repo.hortonworks.com/content/repositories/releases/",
     libraryDependencies += "com.hortonworks" % "shc-core" % "1.1.1-2.1-s_2.11",
     
-    libraryDependencies += "RedisLabs" % "spark-redis" % "0.3.2" from "https://dl.bintray.com/spark-packages/maven/RedisLabs/spark-redis/0.3.2/spark-redis-0.3.2.jar",
-    libraryDependencies += "redis.clients" % "jedis" % "2.9.0",
-    libraryDependencies += "org.apache.commons" % "commons-pool2" % "2.0"
-    // libraryDependencies += "redis.clients" % "jedis" % "2.7.2",
+    // resolvers += "Maven Repository" at "https://dl.bintray.com/spark-packages/maven/RedisLabs/spark-redis/",
+    // libraryDependencies += "RedisLabs" % "spark-redis" % "0.3.2" exclude("com.redislabs", "jedis"),
+    // libraryDependencies += "redis.clients" % "jedis" % "2.7.2"
+    
+    libraryDependencies += "com.redislabs" % "spark-redis" % "2.3.1" exclude("com.redislabs", "jedis"),
+    libraryDependencies += "redis.clients" % "jedis" % "3.0.0-20181113.105826-9" from "https://oss.sonatype.org/content/repositories/snapshots/com/redislabs/jedis/3.0.0-SNAPSHOT/jedis-3.0.0-20181113.105826-9.jar"
+
+    // libraryDependencies += "com.redislabs" % "spark-redis" % "2.3.0",
+    // libraryDependencies += "redis.clients" % "jedis" % "2.9.0",
     // libraryDependencies += "org.apache.commons" % "commons-pool2" % "2.0"
   ).
   enablePlugins(AssemblyPlugin)
 
 artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) => "analyzer.jar" }
-
 // set the main class for 'sbt run'
 mainClass in (Compile, run) := Some("com.twingua.analyzer.AnalyzerDriver")
 // See https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html for instructions on how to publish to Sonatype.
