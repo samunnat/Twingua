@@ -116,7 +116,7 @@ class Map extends React.Component {
         const defaultZoom = 11; //5; remember to change default precision below
 
         // Creating socket to retrieve bounding box data
-        this.socket = socketIO("http://34.83.68.81:3000/");
+        this.socket = socketIO("http://34.83.68.81/");
 
         // this.socket = socketIO("http://localhost:4000");
         this.socket.on("return-languages", this.addPolygons);
