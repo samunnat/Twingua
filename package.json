@@ -47,5 +47,12 @@
     },
     "requiresKeyFile": true,
     "requiresProjectId": true
+  },
+  "prettier": {
+    "printWidth": 160,
+    "tabWidth": 4,
+    "trailingComma": "es5",
+    "bracketSpacing": false,
+    "arrowParens": "always"
   }
 }
