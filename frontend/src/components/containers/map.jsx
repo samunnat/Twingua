@@ -8,7 +8,7 @@ import Navigator from "./Navigator";
 import Legend from "./legend.jsx";
 import {stylesListToClassNames} from "../../lib/utils";
 
-const drawerWidth = 256;
+var drawerWidth = 256;
 const classes = stylesListToClassNames({
     map: {
         display: "block",
@@ -27,6 +27,20 @@ const classes = stylesListToClassNames({
         bottom: ".75%",
         left: "1%",
     },
+    buttonOpen: {
+      position: "absolute",
+      display: "none",
+      top: "50%",
+      left: "0%",
+      zIndex: 20000,
+    },
+    buttonClose: {
+        position: "absolute",
+        top: "2%",
+        left: "14%",
+        color: "white",
+        zIndex: 20000,
+    }
 });
 
 const langKeyToStr = {
@@ -365,8 +379,24 @@ class Map extends React.Component {
         }
     };
 
+    simpleClickHandler = (e) => {
+      this.setState({radioValue: e.target.value});
+      if(drawerWidth == 256){
+        document.getElementById("buttonClose").style.display = "none";
+        document.getElementById("buttonOpen").style.display = "block";
+        drawerWidth = 0;
+      }
+      else{
+        drawerWidth = 256;
+        document.getElementById("buttonClose").style.display = "block";
+        document.getElementById("buttonOpen").style.display = "none";
+      }
+      console.log(drawerWidth);
+    }
+
     render() {
         return (
+
             <React.Fragment>
                 <div className={classes.page}>
                     <div className={classes.buttonContainer}>
@@ -374,6 +404,8 @@ class Map extends React.Component {
                         <RadioButton value="no-label" text="No Labels" checked={this.state.radioValue !== "label"} onChange={this.radioHandler} />
                     </div>
                 </div>
+                <i id="buttonOpen" className={["fas fa-chevron-right fa-3x", classes.buttonOpen].join(' ')} type="button" onClick={this.simpleClickHandler}></i>
+                <i id="buttonClose" className={["fas fa-chevron-circle-left fa-2x", classes.buttonClose].join(' ')} type="button" onClick={this.simpleClickHandler}></i>
                 <div id="map" className={classes.map} />
                 <Hidden xsDown implementation="css">
                     <Navigator PaperProps={{style: {width: drawerWidth}}} data={this.state.data} />
