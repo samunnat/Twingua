@@ -176,70 +176,44 @@ io.on("connection", (socket) => {
 
         // Getting bottom left and top right bounding box geohashes
         // Then using these to get all entries inbetween
-        const startHash = geohash.encode(SW.lat, SW.lng, precision);
-        const endHash = geohash.encode(NE.lat, NE.lng, precision);
-
-        redisClient.zrangebylex(
-            `geohash.${precision}`,
-            `[{"${startHash}`,
-            `[{"${endHash}z`, // added z to grab everything with endhash as a prefix
-            (err, reply) => {
-                if (err) throw err;
-
-                socket.emit(
-                    "return-languages",
-                    reply.map((jsonStr) => {
-                        const geohashObj = JSON.parse(jsonStr);
-                        const hashKey = Object.keys(geohashObj)[0];
-                        const boxStr = geohash.decode_bbox(hashKey);
-                        const obj = {};
-                        obj[boxStr] = geohashObj[hashKey];
-                        return obj;
-                    }),
-                    doClear
-                );
-            }
-        );
-    });
-
-    socket.on("get-languages-slice", (SW, NE, precision, doClear) => {
-        console.log("languages slice socket called");
-
-        // Getting bottom left and top right bounding box geohashes
-        // Then using these to get all entries inbetween
         const minLat = Math.min(SW.lat, NE.lat);
         const maxLat = Math.max(SW.lat, NE.lat);
         const minLng = Math.min(SW.lng, NE.lng);
         const maxLng = Math.max(SW.lng, NE.lng);
 
         const bboxHashes = geohash.bboxes(minLat, minLng, maxLat, maxLng, precision);
+        const end = bboxHashes.length;
 
-        socket.emit(
-            "return-languages",
-            bboxHashes.map((hash) => {
-                redisClient.zrangebylex(
-                    `geohash.${precision}`,
-                    `[{"${hash}`,
-                    `[{"${hash}1`, // added 1 to grab just the one element with the prefix
-                    (err, reply) => {
-                        if (err) throw err;
-                        if (reply.length == 0) {
-                            return;
-                        }
-
-                        return reply.map((jsonStr) => {
-                            const geohashObj = JSON.parse(jsonStr);
-                            const hashKey = Object.keys(geohashObj)[0];
-                            const boxStr = geohash.decode_bbox(hashKey);
-                            const obj = {};
-                            obj[boxStr] = geohashObj[hashKey];
-                            return obj;
-                        });
+        const commands = [];
+        bboxHashes.forEach((hash, i) => {
+            if (i < end - 1) {
+                commands.push(["zrangebylex", `geohash.${precision}`, `[{"${hash}`, `[{"${hash}1`]);
+            } else {
+                redisClient.multi(commands).exec(function(err, reply) {
+                    if (err) throw err;
+                    if (reply.length == 0) {
+                        return;
                     }
-                );
-            }),
-            doClear
-        );
+
+                    socket.emit(
+                        "return-languages",
+                        reply
+                            .filter((ele) => {
+                                return ele.length > 0;
+                            })
+                            .map((jsonStr) => {
+                                const geohashObj = JSON.parse(jsonStr);
+                                const hashKey = Object.keys(geohashObj)[0];
+                                const boxStr = geohash.decode_bbox(hashKey);
+                                const obj = {};
+                                obj[boxStr] = geohashObj[hashKey];
+                                return obj;
+                            }),
+                        doClear
+                    );
+                });
+            }
+        });
     });
 
     // User has disconnected, add clean up here
@@ -248,7 +222,7 @@ io.on("connection", (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 // app.listen(PORT, () => {
 //     console.log(`App listening on port ${PORT}`);
 //     console.log("Press Ctrl+C to quit.");
