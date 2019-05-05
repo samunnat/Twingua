@@ -7,6 +7,7 @@ import RadioButton from "../atoms/radioButton.jsx";
 import Navigator from "./Navigator";
 import Legend from "./legend.jsx";
 import {stylesListToClassNames} from "../../lib/utils";
+import MyWorker from "worker-loader!./worker.js";
 
 var drawerWidth = 256;
 const classes = stylesListToClassNames({
@@ -163,6 +164,7 @@ class Map extends React.Component {
 
         // Variables to keep track of map status
         this.loadedCoords = this.map.getBounds();
+        console.log(this.map.getBounds());
         this.prevPrecision = 6;
         this.prevZoom = defaultZoom;
 
@@ -182,51 +184,91 @@ class Map extends React.Component {
         this.socket.emit("get-languages", SW, NE, this.prevPrecision, true);
 
         // Map zoom handler
+        // this.map.on("movestart", () => {
+        //     // console.log("hi");
+        //     if (Object.keys(this.map._layers).length > 10000) {
+        //         // Just remove everything to reduce lag
+        //         this.clearMap();
+        //     }
+        // });
         this.map.on("moveend", this.mapViewChangeHandler); // This handles moving and zoom
     }
 
     // Callback socketio function that takes the bbox data and adds them as polygons to the map
     addPolygons = (data, doClear) => {
         // NOTE: For some reason the 'slice' return is calling this twice when we are at the default zoom level
+        console.log(doClear);
         if (doClear) {
             this.clearMap();
             this.setState({data: data});
         } else {
             this.setState({data: [...this.state.data, data]});
         }
+        console.log(data.length);
 
-        data.forEach((bboxData, i) => {
-            const key = Object.keys(bboxData)[0];
-            const coords = key.split(",").map((ele) => parseFloat(ele));
-            const languages = Object.keys(bboxData[key]);
-            var maxLang = [-1, -1];
-            languages.forEach((langKey) => {
-                if (bboxData[key][langKey] > maxLang[1]) {
-                    maxLang = [langKey, bboxData[key][langKey]];
-                }
-            });
-
-            if (maxLang[1] !== -1) {
-                if (colors[maxLang[0].replace(/"/g, "")] === undefined) {
-                    // Some tweet's language cannot be indentified
-                    return;
-                }
-                Leaflet.rectangle(
-                    [
-                        [coords[0], coords[1]], // lat1, long1
-                        [coords[0], coords[3]], // lat1, long2
-                        [coords[2], coords[3]], // lat2, long2
-                        [coords[2], coords[1]], // lat2, long1
-                    ],
-                    {
-                        color: colors[maxLang[0].replace(/"/g, "")],
-                        fillOpacity: 0.1,
-                    }
-                )
-                    .bindTooltip(langKeyToStr[maxLang[0].replace(/"/g, "")])
-                    .addTo(this.map);
+        const worker = new MyWorker();
+        worker.onmessage = (e) => {
+            const message = e.data;
+            if (message.type === "done") {
+                console.log("terminate worker");
+                worker.terminate();
+            } else if (message.type === "data") {
+                console.log("worker returned data");
+                message.data.forEach((ele) => {
+                    Leaflet.rectangle(
+                        [
+                            [ele.coords[0], ele.coords[1]], // lat1, long1
+                            [ele.coords[0], ele.coords[3]], // lat1, long2
+                            [ele.coords[2], ele.coords[3]], // lat2, long2
+                            [ele.coords[2], ele.coords[1]], // lat2, long1
+                        ],
+                        {
+                            color: colors[ele.maxLang[0].replace(/"/g, "")],
+                            fillOpacity: 0.1,
+                        }
+                    )
+                        .bindTooltip(langKeyToStr[ele.maxLang[0].replace(/"/g, "")])
+                        .addTo(this.map);
+                });
+                worker.terminate();
+            } else {
+                console.log("ERROR: terminating worker");
+                worker.terminate();
             }
-        });
+            console.log(e);
+        };
+        worker.postMessage({data: data, colors: colors});
+        // data.forEach((bboxData) => {
+        //     const key = Object.keys(bboxData)[0];
+        //     const coords = key.split(",").map((ele) => parseFloat(ele));
+        //     const languages = Object.keys(bboxData[key]);
+        //     var maxLang = [-1, -1];
+        //     languages.forEach((langKey) => {
+        //         if (bboxData[key][langKey] > maxLang[1]) {
+        //             maxLang = [langKey, bboxData[key][langKey]];
+        //         }
+        //     });
+        //     if (maxLang[1] !== -1) {
+        //         if (colors[maxLang[0].replace(/"/g, "")] === undefined) {
+        //             // Some tweet's language cannot be indentified
+        //             return;
+        //         }
+        //         Leaflet.rectangle(
+        //             [
+        //                 [coords[0], coords[1]], // lat1, long1
+        //                 [coords[0], coords[3]], // lat1, long2
+        //                 [coords[2], coords[3]], // lat2, long2
+        //                 [coords[2], coords[1]], // lat2, long1
+        //             ],
+        //             {
+        //                 color: colors[maxLang[0].replace(/"/g, "")],
+        //                 fillOpacity: 0.1,
+        //             }
+        //         )
+        //             .bindTooltip(langKeyToStr[maxLang[0].replace(/"/g, "")])
+        //             .addTo(this.map);
+        //     }
+        // });
     };
 
     // Function that handles map view changes
@@ -253,7 +295,7 @@ class Map extends React.Component {
         if (
             this.prevPrecision === precision &&
             this.prevZoom === e.target._zoom &&
-            Object.keys(this.map._layers).length <= 20000 // Limit to 20,000 boxes before clearing
+            Object.keys(this.map._layers).length <= 15000 // Limit to 15,000 boxes before clearing
         ) {
             // View shifted: screen dragged
             const SW1 = {
@@ -286,7 +328,7 @@ class Map extends React.Component {
                     lng: NE2.lng,
                 };
 
-                this.socket.emit("get-languages-slice", sliceSW, sliceNE, precision, false);
+                this.socket.emit("get-languages", sliceSW, sliceNE, precision, false);
             }
 
             if (SW2.lat < SW1.lat) {
@@ -299,7 +341,7 @@ class Map extends React.Component {
                     lat: SW1.lat,
                     lng: NE2.lng,
                 };
-                this.socket.emit("get-languages-slice", sliceSW, sliceNE, precision, false);
+                this.socket.emit("get-languages", sliceSW, sliceNE, precision, false);
             }
 
             if (NE2.lng > NE1.lng) {
@@ -312,7 +354,7 @@ class Map extends React.Component {
                     lat: Math.min(NE1.lat, NE2.lat),
                     lng: NE2.lng,
                 };
-                this.socket.emit("get-languages-slice", sliceSW, sliceNE, precision, false);
+                this.socket.emit("get-languages", sliceSW, sliceNE, precision, false);
             }
 
             if (SW2.lng < SW1.lng) {
@@ -325,7 +367,7 @@ class Map extends React.Component {
                     lat: Math.min(NE1.lat, NE2.lat),
                     lng: SW1.lng,
                 };
-                this.socket.emit("get-languages-slice", sliceSW, sliceNE, precision, false);
+                this.socket.emit("get-languages", sliceSW, sliceNE, precision, false);
             }
 
             this.loadedCoords = bounds;
@@ -344,6 +386,7 @@ class Map extends React.Component {
             this.loadedCoords = bounds;
             this.socket.emit("get-languages", SW, NE, precision, true);
         }
+        this.prevZoom = e.target._zoom;
     };
 
     // Function to clear all layers on the leaflet map
