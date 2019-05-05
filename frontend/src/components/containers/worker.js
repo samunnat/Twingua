@@ -1,7 +1,6 @@
 onmessage = (e) => {
     const data = e.data.data;
     const colors = e.data.colors;
-    console.log(colors);
 
     var retData = data
         .map((bboxData) => {
@@ -10,7 +9,7 @@ onmessage = (e) => {
             const languages = Object.keys(bboxData[key]);
             var maxLang = [-1, -1];
             languages.forEach((langKey) => {
-                if (bboxData[key][langKey] > maxLang[1] && langKey !== `"en"`) {
+                if (bboxData[key][langKey] > maxLang[1]) {
                     // console.log(langKey);
                     maxLang = [langKey, bboxData[key][langKey]];
                 }

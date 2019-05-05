@@ -150,7 +150,6 @@ class Map extends React.Component {
 
         // Variables to keep track of map status
         this.loadedCoords = this.map.getBounds();
-        console.log(this.map.getBounds());
         this.prevPrecision = 6;
         this.prevZoom = defaultZoom;
 
@@ -170,36 +169,57 @@ class Map extends React.Component {
         this.socket.emit("get-languages", SW, NE, this.prevPrecision, true);
 
         // Map zoom handler
-        // this.map.on("movestart", () => {
-        //     // console.log("hi");
-        //     if (Object.keys(this.map._layers).length > 10000) {
-        //         // Just remove everything to reduce lag
-        //         this.clearMap();
-        //     }
-        // });
         this.map.on("moveend", this.mapViewChangeHandler); // This handles moving and zoom
     }
 
     // Callback socketio function that takes the bbox data and adds them as polygons to the map
     addPolygons = (data, doClear) => {
-        // NOTE: For some reason the 'slice' return is calling this twice when we are at the default zoom level
-        console.log(doClear);
         if (doClear) {
             this.clearMap();
             this.setState({data: data});
         } else {
             this.setState({data: [...this.state.data, data]});
         }
-        console.log(data.length);
 
-        const worker = new MyWorker();
+        const halfLength = Math.ceil(data.length / 2);
+        const leftData = data.splice(0, halfLength);
+        const rightData = data;
+
+        const quarterLength1 = Math.ceil(halfLength / 2);
+        const quarterLength2 = Math.ceil(rightData.length / 2);
+
+        // Splitting the data up into quarters
+        const quarter1 = leftData.splice(0, quarterLength1);
+        const quarter2 = leftData;
+        const quarter3 = rightData.splice(0, quarterLength2);
+        const quarter4 = rightData;
+
+        const worker1 = new MyWorker();
+        const worker2 = new MyWorker();
+        const worker3 = new MyWorker();
+        const worker4 = new MyWorker();
+
+        // Added events for when the workers message the main thread
+        this.addWorkerEvents(worker1, 1);
+        this.addWorkerEvents(worker2, 2);
+        this.addWorkerEvents(worker3, 3);
+        this.addWorkerEvents(worker4, 4);
+
+        // Starting the 4 workers
+        worker1.postMessage({data: quarter1, colors: colors});
+        worker2.postMessage({data: quarter2, colors: colors});
+        worker3.postMessage({data: quarter3, colors: colors});
+        worker4.postMessage({data: quarter4, colors: colors});
+    };
+
+    addWorkerEvents = (worker) => {
         worker.onmessage = (e) => {
             const message = e.data;
             if (message.type === "done") {
-                console.log("terminate worker");
+                // console.log("terminate worker");
                 worker.terminate();
             } else if (message.type === "data") {
-                console.log("worker returned data");
+                // console.log("worker returned data");
                 message.data.forEach((ele) => {
                     Leaflet.rectangle(
                         [
@@ -218,43 +238,10 @@ class Map extends React.Component {
                 });
                 worker.terminate();
             } else {
-                console.log("ERROR: terminating worker");
+                // console.log("ERROR: terminating worker");
                 worker.terminate();
             }
-            console.log(e);
         };
-        worker.postMessage({data: data, colors: colors});
-        // data.forEach((bboxData) => {
-        //     const key = Object.keys(bboxData)[0];
-        //     const coords = key.split(",").map((ele) => parseFloat(ele));
-        //     const languages = Object.keys(bboxData[key]);
-        //     var maxLang = [-1, -1];
-        //     languages.forEach((langKey) => {
-        //         if (bboxData[key][langKey] > maxLang[1]) {
-        //             maxLang = [langKey, bboxData[key][langKey]];
-        //         }
-        //     });
-        //     if (maxLang[1] !== -1) {
-        //         if (colors[maxLang[0].replace(/"/g, "")] === undefined) {
-        //             // Some tweet's language cannot be indentified
-        //             return;
-        //         }
-        //         Leaflet.rectangle(
-        //             [
-        //                 [coords[0], coords[1]], // lat1, long1
-        //                 [coords[0], coords[3]], // lat1, long2
-        //                 [coords[2], coords[3]], // lat2, long2
-        //                 [coords[2], coords[1]], // lat2, long1
-        //             ],
-        //             {
-        //                 color: colors[maxLang[0].replace(/"/g, "")],
-        //                 fillOpacity: 0.1,
-        //             }
-        //         )
-        //             .bindTooltip(langKeyToStr[maxLang[0].replace(/"/g, "")])
-        //             .addTo(this.map);
-        //     }
-        // });
     };
 
     // Function that handles map view changes
