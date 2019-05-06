@@ -415,7 +415,7 @@ class Map extends React.Component {
         }
     };
 
-    simpleClickHandler = (e) => {
+    toggleSidebar = (e) => {
         this.setState({radioValue: e.target.value});
         if (drawerWidth === 256) {
             document.getElementById("buttonClose").style.display = "none";
@@ -426,7 +426,7 @@ class Map extends React.Component {
             document.getElementById("buttonClose").style.display = "block";
             document.getElementById("buttonOpen").style.display = "none";
         }
-        console.log(drawerWidth);
+        //console.log(drawerWidth);
     };
 
     filterClick = (language, selectAll = false, deselectAll = false) => {
@@ -481,12 +481,12 @@ class Map extends React.Component {
                         <RadioButton value="no-label" text="No Labels" checked={this.state.radioValue !== "label"} onChange={this.radioHandler} />
                     </div>
                 </div> */}
-                <i id="buttonOpen" className={["fas fa-chevron-right fa-3x", classes.buttonOpen].join(" ")} type="button" onClick={this.simpleClickHandler} />
+                <i id="buttonOpen" className={["fas fa-chevron-right fa-3x", classes.buttonOpen].join(" ")} type="button" onClick={this.toggleSidebar} />
                 <i
                     id="buttonClose"
                     className={["fas fa-chevron-circle-left fa-2x", classes.buttonClose].join(" ")}
                     type="button"
-                    onClick={this.simpleClickHandler}
+                    onClick={this.toggleSidebar}
                 />
                 <div id="map" className={classes.map} />
                 <Hidden xsDown implementation="css">
