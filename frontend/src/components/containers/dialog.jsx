@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import {withStyles} from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -32,42 +31,19 @@ const styles = (theme) => ({
 });
 
 class MaxWidthDialog extends React.Component {
-    state = {
-        open: "open",
-        fullWidth: true,
-    };
-
-    handleClickOpen = () => {
-        this.setState({open: true});
-    };
-
-    handleClose = () => {
-        this.setState({open: false});
-    };
-
-    handleFullWidthChange = (event) => {
-        this.setState({fullWidth: event.target.checked});
-    };
-
     render() {
         return (
             <React.Fragment>
                 <Button variant="outlined" color="primary" onClick={this.handleClickOpen}>
                     Open max-width dialog
                 </Button>
-                <Dialog
-                    fullWidth={this.state.fullWidth}
-                    maxWidth="xl"
-                    open={this.state.open}
-                    onClose={this.handleClose}
-                    aria-labelledby="max-width-dialog-title"
-                >
+                <Dialog fullWidth="true" maxWidth="xl" open="open" onClose={this.props.handleClose} aria-labelledby="max-width-dialog-title">
                     <DialogTitle id="max-width-dialog-title">Country Statistics</DialogTitle>
                     <DialogContent>
                         <DialogContentText>You can set my maximum width and whether to adapt or not.</DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={this.handleClose} color="primary">
+                        <Button onClick={this.props.handleClose} color="primary">
                             Close
                         </Button>
                     </DialogActions>

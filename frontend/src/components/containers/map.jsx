@@ -4,7 +4,7 @@ import socketIO from "socket.io-client";
 import Hidden from "@material-ui/core/Hidden";
 import * as d3Select from "d3-selection";
 import RadioButton from "../atoms/radioButton.jsx";
-import Navigator from "./Navigator";
+import Navigator from "./Navigator.jsx";
 import Legend from "./legend.jsx";
 import {stylesListToClassNames, getCountryName} from "../../lib/utils";
 import LanguageWorker from "worker-loader!./language-worker.js";
@@ -195,7 +195,6 @@ class Map extends React.Component {
     // Callback socketio function that takes the bbox data and adds them as polygons to the map
     addPolygons = (data, doClear) => {
         if (doClear) {
-            console.log(["data"]);
             this.clearMap();
             this.setState({data: [data]});
         } else {
