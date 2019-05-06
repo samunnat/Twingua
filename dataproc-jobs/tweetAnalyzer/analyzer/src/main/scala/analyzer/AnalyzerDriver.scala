@@ -10,9 +10,12 @@ import org.apache.spark.streaming._
 import com.redislabs.provider.redis._
 
 object AnalyzerDriver{
-  val catalog =
-  s"""{
-      |"table":{"namespace":"default", "name":"tweets_all"},
+
+  def uploadBatch(batchNum: Int, updateCountries: Boolean, updateGeoHashes: boolean) {
+
+    val catalog =
+    s"""{
+      |"table":{"namespace":"default", "name":"tweets"},
       |"rowkey":"id",
       |"columns":{
         |"id":{"cf":"rowkey", "col":"id", "type":"string"},
@@ -26,10 +29,6 @@ object AnalyzerDriver{
         |"retCount":{"cf":"tweetFamily", "col":"retweet_count", "type":"string"}
       |}
     |}""".stripMargin
-
-  def main(args: Array[String]) {
-
-    val batchNum = args(0)
 
     val spark = SparkSession
     .builder()
@@ -52,7 +51,8 @@ object AnalyzerDriver{
                         .options(Map(HBaseTableCatalog.tableCatalog->cat))
                         .format("org.apache.spark.sql.execution.datasources.hbase")
                         .load()
-                        .filter( ($"language".isin(allowedLangs:_*))===true )  // ` is after _ in lexicographical order
+                        .filter( ($"language".isin(allowedLangs:_*))===true )
+                        //.filter( $"id" > (batchNum+"_") && $"id" <= (batchNum+"`") && ($"language".isin(allowedLangs:_*))===true )  // ` is after _ in lexicographical order
       
       // Hbase has some numberical columns that it stores as strings
       // so casting them into integers in the dataframe
@@ -88,14 +88,24 @@ object AnalyzerDriver{
     //   val geoRDD = sc.fromRedisKV("")
     // }
 
-    def getJsonScoreRDD( dataFr: DataFrame, headerName: String ) = {
-      dataFr.select(col(headerName), to_json(struct(dataFr.drop(headerName).col("*"))))
-            .map(
-              row => (
-                      "{" + "\"" + row.getString(0) + "\"" + ":" + row.getString(1) + "}"
-                      ,"0"   // sorted-set-score -> will be converted to double by spark-redis library later
-                    ) 
-            ).rdd
+    def getJsonScoreRDD( dataFr: DataFrame, headerName: String, wrapHeader: Boolean ) = {
+      val scoreDf = dataFr.select(col(headerName), to_json(struct(dataFr.drop(headerName).col("*"))))
+      if( wrapHeader ) {
+        scoreDf.map(
+          row => (
+                  "{" + "\"" + row.getString(0) + "\"" + ":" + row.getString(1) + "}"
+                  ,"0"   // sorted-set-score -> will be converted to double by spark-redis library later
+                ) 
+        ).rdd
+      }
+      else {
+        scoreDf.map(
+          row => (
+                  "{" + row.getString(0) + ":" + row.getString(1) + "}"
+                  ,"0"   // sorted-set-score -> will be converted to double by spark-redis library later
+                ) 
+        ).rdd
+      }
     }
 
     def writeCountryLangStats() = {
@@ -103,7 +113,8 @@ object AnalyzerDriver{
       val countriesDfWithTotals = countriesDf.withColumn( "total", countriesDf.drop("country_code").columns.map(c => col(c)).reduce(_ + _) )
       countriesDfWithTotals.select("country_code", "total").show()
 
-      val countriesrdd = getJsonScoreRDD( countriesDfWithTotals, "country_code")
+      val countriesrdd = getJsonScoreRDD( countriesDfWithTotals, "country_code", false)
+      countriesrdd.collect.foreach(println)
       sc.toRedisZSET(countriesrdd, "countries")
     }
 
@@ -112,20 +123,21 @@ object AnalyzerDriver{
         println("Writing geohash-precision-" + precision + " stats to Redis...")
 
         val geoDf = getHashLangCrossTab(precision)
-        geoDf.show()
+        geoDf.limit(10).show()
 
-        val geoJsonRDD = getJsonScoreRDD(geoDf, "geo")
+        val geoJsonRDD = getJsonScoreRDD(geoDf, "geo", true)
+        //geoJsonRDD.collect.foreach(println)
         sc.toRedisZSET(geoJsonRDD, "geohash."+precision)
 
         println("Precision " + precision + " write complete")
         println()
       }
     }
-
+    
     var precisionsToWrite = Array(6, 5, 4, 3)
 
     writeGeohashLangStats(precisionsToWrite)
-    writeCountryLangStats()
+    //writeCountryLangStats()
 
     // writing hashes and languages to file
     // coalesce(1) is merging all partitions of dataframe into one, so only 1 file is written
@@ -135,5 +147,21 @@ object AnalyzerDriver{
 
     spark.stop()
     println("Job complete")
+
+    incrementBatchNumber()
+  }
+
+  def incrementBatchNumber() = {
+
+  }
+
+  def main(args: Array[String]) = {
+    println(args(0))
+
+    val batchNum = args(0).toInt
+    val updateCountries = args(1)==="true"
+    val updateGeoHashes = args(2)==="true"
+
+    uploadBatch(batchNum, updateCountries, updateGeoHashes)
   }
 }
