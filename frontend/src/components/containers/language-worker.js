@@ -13,8 +13,7 @@ onmessage = (e) => {
             var maxLang = [-1, 0];
 
             languages.forEach((langKey) => {
-                if (bboxData[key][langKey] > maxLang[1] && !filter.includes(langKey)) {
-                    // console.log(langKey);
+                if (langKey !== "total" && bboxData[key][langKey] > maxLang[1] && !filter.includes(langKey)) {
                     maxLang = [langKey, bboxData[key][langKey]];
                 }
             });

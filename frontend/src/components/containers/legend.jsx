@@ -108,20 +108,18 @@ class Legend extends React.Component {
             <div className={classes.container}>
                 <div className={classes.info}>
                     {this.state.minimized ? <React.Fragment /> : this.createLegendList(this.props.langColors)}
-                    <div className={classes.buttonContainer}>
-                        {this.state.minimized ? (
-                            <React.Fragment />
-                        ) : (
-                            <React.Fragment>
-                                <div className={classes.button} id="selectButton" onClick={() => this.props.filterClick("", true, false)}>
-                                    Select All
-                                </div>
-                                <div className={classes.button} id="selectButton" onClick={() => this.props.filterClick("", false, true)}>
-                                    Deselect All
-                                </div>
-                            </React.Fragment>
-                        )}
-                    </div>
+                    {this.state.minimized ? (
+                        <React.Fragment />
+                    ) : (
+                        <div className={classes.buttonContainer}>
+                            <div className={classes.button} id="selectButton" onClick={() => this.props.filterClick("", true, false)}>
+                                Select All
+                            </div>
+                            <div className={classes.button} id="selectButton" onClick={() => this.props.filterClick("", false, true)}>
+                                Deselect All
+                            </div>
+                        </div>
+                    )}
                     <div className={classes.showHideButton} id="legend-ele" onClick={() => this.setState({minimized: !this.state.minimized})}>
                         {this.state.minimized ? <i className="fas fa-expand" /> : <i className="far fa-window-minimize" />}
                     </div>

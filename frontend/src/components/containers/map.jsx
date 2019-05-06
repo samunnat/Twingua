@@ -123,9 +123,9 @@ class Map extends React.Component {
         super(props);
         this.state = {
             radioValue: "label",
-            data: {},
+            data: [],
             filteredLangs: [],
-            countryData: {},
+            countryData: [],
         };
     }
 
@@ -195,10 +195,11 @@ class Map extends React.Component {
     // Callback socketio function that takes the bbox data and adds them as polygons to the map
     addPolygons = (data, doClear) => {
         if (doClear) {
+            console.log(["data"]);
             this.clearMap();
-            this.setState({data: data});
+            this.setState({data: [data]});
         } else {
-            this.setState({data: [...this.state.data, data]});
+            this.setState({data: [this.state.data.concat(data)]});
         }
 
         const halfLength = Math.ceil(data.length / 2);
@@ -256,7 +257,6 @@ class Map extends React.Component {
                 // console.log("terminate worker");
                 worker.terminate();
             } else if (message.type === "data") {
-                // console.log("worker returned data");
                 if (this.curBatch === message.batch || this.map.getZoom() === message.zoom) {
                     message.data.forEach((ele) => {
                         Leaflet.rectangle(
@@ -513,7 +513,13 @@ class Map extends React.Component {
                 <Hidden xsDown implementation="css">
                     <Navigator PaperProps={{style: {width: drawerWidth}}} data={this.state.data} countryData={this.state.countryData} />
                 </Hidden>
-                <Legend langColors={colors} langKeyToStr={langKeyToStr} filteredLangs={this.state.filteredLangs} filterClick={this.filterClick} />
+                <Legend
+                    langColors={colors}
+                    data={this.state.data}
+                    langKeyToStr={langKeyToStr}
+                    filteredLangs={this.state.filteredLangs}
+                    filterClick={this.filterClick}
+                />
             </React.Fragment>
         );
     }

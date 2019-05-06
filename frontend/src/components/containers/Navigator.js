@@ -19,6 +19,8 @@ import Autorenew from "@material-ui/icons/Autorenew";
 import Place from "@material-ui/icons/Place";
 import Terrain from "@material-ui/icons/Terrain";
 
+import MaxWidthDialog from "./dialog.jsx";
+
 const categories = [
     {
         id: "Current View",
@@ -36,7 +38,14 @@ const categories = [
             // { id: "Test Lab", icon: <PhonelinkSetupIcon />, targetUrl: "/testlab" },
             {id: "Language use percentages/counts", icon: <Language />, targetUrl: "/hosting"},
             {id: "Countries", icon: <Terrain />, targetUrl: "/functions"},
-            {id: "Pie Charts", icon: <PieChart />, targetUrl: "/mlkit"},
+            {
+                id: "Pie Charts",
+                icon: <PieChart />,
+                targetUrl: "/mlkit",
+                onClick: () => {
+                    console.log("hello");
+                },
+            },
         ],
     },
     {
@@ -94,57 +103,60 @@ function Navigator(props) {
     const {classes, data, countryData, ...other} = props;
 
     return (
-        <Drawer variant="permanent" {...other}>
-            <List disablePadding>
-                <ListItem className={classNames(classes.firebase, classes.item, classes.itemCategory)}>Twingua</ListItem>
-                <ListItem className={classNames(classes.item, classes.itemCategory)}>
-                    <ListItemIcon>
-                        <HomeIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                        classes={{
-                            primary: classes.itemPrimary,
-                        }}
-                    >
-                        Home
-                    </ListItemText>
-                </ListItem>
-                {categories.map(({id, children}) => (
-                    <React.Fragment key={id}>
-                        <ListItem className={classes.categoryHeader}>
-                            <ListItemText
-                                classes={{
-                                    primary: classes.categoryHeaderPrimary,
-                                }}
-                            >
-                                {id}
-                            </ListItemText>
-                        </ListItem>
-                        {children.map(({id: childId, icon, active, targetUrl}) => (
-                            <ListItem
-                                button
-                                dense
-                                key={childId}
-                                //component={Link}
-                                to={targetUrl}
-                                className={classNames(classes.item, classes.itemActionable, active && classes.itemActiveItem)}
-                            >
-                                <ListItemIcon>{icon}</ListItemIcon>
+        <React.Fragment>
+            <Drawer variant="permanent" {...other}>
+                <List disablePadding>
+                    <ListItem className={classNames(classes.firebase, classes.item, classes.itemCategory)}>Twingua</ListItem>
+                    <ListItem className={classNames(classes.item, classes.itemCategory)}>
+                        <ListItemIcon>
+                            <HomeIcon />
+                        </ListItemIcon>
+                        <ListItemText
+                            classes={{
+                                primary: classes.itemPrimary,
+                            }}
+                        >
+                            Home
+                        </ListItemText>
+                    </ListItem>
+                    {categories.map(({id, children}) => (
+                        <React.Fragment key={id}>
+                            <ListItem className={classes.categoryHeader}>
                                 <ListItemText
                                     classes={{
-                                        primary: classes.itemPrimary,
-                                        textDense: classes.textDense,
+                                        primary: classes.categoryHeaderPrimary,
                                     }}
                                 >
-                                    {childId}
+                                    {id}
                                 </ListItemText>
                             </ListItem>
-                        ))}
-                        <Divider className={classes.divider} />
-                    </React.Fragment>
-                ))}
-            </List>
-        </Drawer>
+                            {children.map(({id: childId, icon, active, targetUrl}) => (
+                                <ListItem
+                                    button
+                                    dense
+                                    key={childId}
+                                    //component={Link}
+                                    to={targetUrl}
+                                    className={classNames(classes.item, classes.itemActionable, active && classes.itemActiveItem)}
+                                >
+                                    <ListItemIcon>{icon}</ListItemIcon>
+                                    <ListItemText
+                                        classes={{
+                                            primary: classes.itemPrimary,
+                                            textDense: classes.textDense,
+                                        }}
+                                    >
+                                        {childId}
+                                    </ListItemText>
+                                </ListItem>
+                            ))}
+                            <Divider className={classes.divider} />
+                        </React.Fragment>
+                    ))}
+                </List>
+            </Drawer>
+            <MaxWidthDialog />;
+        </React.Fragment>
     );
 }
 
