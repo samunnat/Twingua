@@ -1,4 +1,5 @@
 import * as React from "react";
+import Button from "@material-ui/core/Button";
 import {stylesListToClassNames} from "../../lib/utils";
 
 const classes = stylesListToClassNames({
@@ -8,6 +9,10 @@ const classes = stylesListToClassNames({
         position: "absolute",
         zIndex: 1000,
     },
+    buttonContainer: {
+        display: "flex",
+        justifyContent: "center",
+    },
     info: {
         marginBottom: "10px",
         float: "right",
@@ -15,13 +20,31 @@ const classes = stylesListToClassNames({
         boxShadow: "0 0 15px rgba(0, 0, 0, 0.2)",
         padding: "8px 8px",
         borderRadius: "5px",
+        transition: "width 2s",
+    },
+    langRow: {
+        width: "100%",
+        display: "flex",
+        cursor: "pointer",
     },
     legendColor: {
-        width: "18px",
-        height: "18px",
+        width: "12px",
+        height: "12px",
         float: "left",
-        marginRight: "8px",
-        opacity: "0.7",
+        boxShadow: "1px 2px rgba(0, 0, 0, 0.2)",
+        margin: "2px 8px 2px 4px",
+        border: "1px solid black",
+    },
+    legendKey: {
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+    },
+    legendKeyDisabled: {
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        color: "#B2B2B2",
     },
     showHideButton: {
         textAlign: "center",
@@ -30,8 +53,8 @@ const classes = stylesListToClassNames({
         fontSize: "12px",
         margin: "4px",
         borderRadius: "5px",
-        minWidth: "25px",
-        minHeight: "25px",
+        minWidth: "20px",
+        minHeight: "20px",
         justifyContent: "center",
     },
 });
@@ -47,12 +70,25 @@ class Legend extends React.Component {
     createLegendList = (colors) => {
         const itemList = [];
         for (var langKey in colors) {
+            const arg = langKey;
             itemList.push(
-                <React.Fragment key={langKey}>
-                    <i className={classes.legendColor} style={{background: colors[langKey]}} />
-                    {this.props.langKeyToStr[langKey]}
+                <div
+                    key={langKey}
+                    className={classes.langRow}
+                    id="legend-ele"
+                    onClick={() => {
+                        this.props.filterClick(arg);
+                    }}
+                >
+                    <div
+                        className={classes.legendColor}
+                        style={{background: this.props.filteredLangs.includes(`"${langKey}"`) ? "#000000" : colors[langKey]}}
+                    />
+                    <span id="noselect" className={this.props.filteredLangs.includes(`"${langKey}"`) ? classes.legendKeyDisabled : classes.legendKey}>
+                        {this.props.langKeyToStr[langKey]}
+                    </span>
                     <br />
-                </React.Fragment>
+                </div>
             );
         }
 
@@ -64,7 +100,17 @@ class Legend extends React.Component {
             <div className={classes.container}>
                 <div className={classes.info}>
                     {this.state.minimized ? <React.Fragment /> : this.createLegendList(this.props.langColors)}
-                    <div className={classes.showHideButton} id="legend-min" onClick={() => this.setState({minimized: !this.state.minimized})}>
+                    <div className={classes.buttonContainer}>
+                        {this.state.minimized ? (
+                            <React.Fragment />
+                        ) : (
+                            <React.Fragment>
+                                <Button onClick={() => this.props.filterClick("", true, false)}>Select All</Button>
+                                <Button onClick={() => this.props.filterClick("", false, true)}>Deselect All</Button>
+                            </React.Fragment>
+                        )}
+                    </div>
+                    <div className={classes.showHideButton} id="legend-ele" onClick={() => this.setState({minimized: !this.state.minimized})}>
                         {this.state.minimized ? <i className="fas fa-expand" /> : <i className="far fa-window-minimize" />}
                     </div>
                 </div>

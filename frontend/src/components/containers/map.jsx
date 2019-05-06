@@ -29,19 +29,19 @@ const classes = stylesListToClassNames({
         left: "1%",
     },
     buttonOpen: {
-      position: "absolute",
-      display: "none",
-      top: "50%",
-      left: "0%",
-      zIndex: 20000,
+        position: "absolute",
+        display: "none",
+        top: "50%",
+        left: "0%",
+        zIndex: 20000,
     },
     buttonClose: {
         position: "absolute",
         top: "2%",
-        left: "14%",
+        left: drawerWidth - 10,
         color: "white",
         zIndex: 20000,
-    }
+    },
 });
 
 const langKeyToStr = {
@@ -124,11 +124,12 @@ class Map extends React.Component {
         this.state = {
             radioValue: "label",
             data: {},
+            filteredLangs: [],
         };
     }
 
     componentDidMount() {
-        const defaultZoom = 11; //5; remember to change default precision below
+        const defaultZoom = 5; //5; remember to change default precision below
 
         // Creating socket to retrieve bounding box data
         this.socket = socketIO("http://34.83.68.81:3000");
@@ -153,6 +154,7 @@ class Map extends React.Component {
             minZoom: 4,
             zoom: defaultZoom,
             layers: [this.layers.labels],
+            zoomControl: false,
         });
 
         // Changing the position of the +/- buttons
@@ -164,8 +166,9 @@ class Map extends React.Component {
 
         // Variables to keep track of map status
         this.loadedCoords = this.map.getBounds();
-        this.prevPrecision = 6;
+        this.prevPrecision = 4;
         this.prevZoom = defaultZoom;
+        this.curBatch = 0;
 
         // var svg = d3Select.select(this.map.getPanes().overlayPane).append("svg"),
         //     g = svg.append("g").attr("class", "leaflet-zoom-hide");
@@ -220,10 +223,11 @@ class Map extends React.Component {
         this.addWorkerEvents(worker4, 4);
 
         // Starting the 4 workers
-        worker1.postMessage({data: quarter1, colors: colors});
-        worker2.postMessage({data: quarter2, colors: colors});
-        worker3.postMessage({data: quarter3, colors: colors});
-        worker4.postMessage({data: quarter4, colors: colors});
+        this.curBatch++;
+        worker1.postMessage({data: quarter1, colors: colors, filter: this.state.filteredLangs, batch: this.curBatch, zoom: this.map.getZoom()});
+        worker2.postMessage({data: quarter2, colors: colors, filter: this.state.filteredLangs, batch: this.curBatch, zoom: this.map.getZoom()});
+        worker3.postMessage({data: quarter3, colors: colors, filter: this.state.filteredLangs, batch: this.curBatch, zoom: this.map.getZoom()});
+        worker4.postMessage({data: quarter4, colors: colors, filter: this.state.filteredLangs, batch: this.curBatch, zoom: this.map.getZoom()});
     };
 
     addWorkerEvents = (worker) => {
@@ -234,22 +238,24 @@ class Map extends React.Component {
                 worker.terminate();
             } else if (message.type === "data") {
                 // console.log("worker returned data");
-                message.data.forEach((ele) => {
-                    Leaflet.rectangle(
-                        [
-                            [ele.coords[0], ele.coords[1]], // lat1, long1
-                            [ele.coords[0], ele.coords[3]], // lat1, long2
-                            [ele.coords[2], ele.coords[3]], // lat2, long2
-                            [ele.coords[2], ele.coords[1]], // lat2, long1
-                        ],
-                        {
-                            color: colors[ele.maxLang[0].replace(/"/g, "")],
-                            fillOpacity: 0.1,
-                        }
-                    )
-                        .bindTooltip(langKeyToStr[ele.maxLang[0].replace(/"/g, "")])
-                        .addTo(this.map);
-                });
+                if (this.curBatch === message.batch || this.map.getZoom() === message.zoom) {
+                    message.data.forEach((ele) => {
+                        Leaflet.rectangle(
+                            [
+                                [ele.coords[0], ele.coords[1]], // lat1, long1
+                                [ele.coords[0], ele.coords[3]], // lat1, long2
+                                [ele.coords[2], ele.coords[3]], // lat2, long2
+                                [ele.coords[2], ele.coords[1]], // lat2, long1
+                            ],
+                            {
+                                color: colors[ele.maxLang[0].replace(/"/g, "")],
+                                fillOpacity: 0.1,
+                            }
+                        )
+                            .bindTooltip(langKeyToStr[ele.maxLang[0].replace(/"/g, "")])
+                            .addTo(this.map);
+                    });
+                }
                 worker.terminate();
             } else {
                 // console.log("ERROR: terminating worker");
@@ -410,37 +416,83 @@ class Map extends React.Component {
     };
 
     simpleClickHandler = (e) => {
-      this.setState({radioValue: e.target.value});
-      if(drawerWidth == 256){
-        document.getElementById("buttonClose").style.display = "none";
-        document.getElementById("buttonOpen").style.display = "block";
-        drawerWidth = 0;
-      }
-      else{
-        drawerWidth = 256;
-        document.getElementById("buttonClose").style.display = "block";
-        document.getElementById("buttonOpen").style.display = "none";
-      }
-      console.log(drawerWidth);
-    }
+        this.setState({radioValue: e.target.value});
+        if (drawerWidth === 256) {
+            document.getElementById("buttonClose").style.display = "none";
+            document.getElementById("buttonOpen").style.display = "block";
+            drawerWidth = 0;
+        } else {
+            drawerWidth = 256;
+            document.getElementById("buttonClose").style.display = "block";
+            document.getElementById("buttonOpen").style.display = "none";
+        }
+        console.log(drawerWidth);
+    };
+
+    filterClick = (language, selectAll = false, deselectAll = false) => {
+        const index = this.state.filteredLangs.indexOf(`"${language}"`);
+        if (selectAll) {
+            if (this.state.filteredLangs === 0) {
+                // All languages are already selected
+                return;
+            }
+            this.setState({filteredLangs: []});
+        } else if (deselectAll) {
+            const langs = Object.keys(colors).map((ele) => {
+                return `"${ele}"`;
+            });
+            if (langs.length === this.state.filteredLangs) {
+                // All languages are already deselected
+                return;
+            }
+            this.setState({filteredLangs: langs});
+        } else {
+            if (index === -1) {
+                // Not in list of filtered languages
+                this.setState({filteredLangs: [`"${language}"`, ...this.state.filteredLangs]});
+            } else {
+                // In list of filtered languages
+                this.setState({
+                    filteredLangs: this.state.filteredLangs.slice(0, index).concat(this.state.filteredLangs.slice(index + 1, this.state.filteredLangs.length)),
+                });
+            }
+        }
+
+        // Update the map
+        const bounds = this.map.getBounds();
+        const SW = {
+            lat: bounds._southWest.lat,
+            lng: bounds._southWest.lng,
+        };
+        const NE = {
+            lat: bounds._northEast.lat,
+            lng: bounds._northEast.lng,
+        };
+        this.loadedCoords = bounds;
+        this.socket.emit("get-languages", SW, NE, this.prevPrecision, true);
+    };
 
     render() {
         return (
-
             <React.Fragment>
-                <div className={classes.page}>
+                {/* <div className={classes.page}>
                     <div className={classes.buttonContainer}>
                         <RadioButton value="label" text="With Labels" checked={this.state.radioValue === "label"} onChange={this.radioHandler} />
                         <RadioButton value="no-label" text="No Labels" checked={this.state.radioValue !== "label"} onChange={this.radioHandler} />
                     </div>
-                </div>
-                <i id="buttonOpen" className={["fas fa-chevron-right fa-3x", classes.buttonOpen].join(' ')} type="button" onClick={this.simpleClickHandler}></i>
-                <i id="buttonClose" className={["fas fa-chevron-circle-left fa-2x", classes.buttonClose].join(' ')} type="button" onClick={this.simpleClickHandler}></i>
+                </div> */}
+                <i id="buttonOpen" className={["fas fa-chevron-right fa-3x", classes.buttonOpen].join(" ")} type="button" onClick={this.simpleClickHandler} />
+                <i
+                    id="buttonClose"
+                    className={["fas fa-chevron-circle-left fa-2x", classes.buttonClose].join(" ")}
+                    type="button"
+                    onClick={this.simpleClickHandler}
+                />
                 <div id="map" className={classes.map} />
                 <Hidden xsDown implementation="css">
                     <Navigator PaperProps={{style: {width: drawerWidth}}} data={this.state.data} />
                 </Hidden>
-                <Legend langColors={colors} langKeyToStr={langKeyToStr} />
+                <Legend langColors={colors} langKeyToStr={langKeyToStr} filteredLangs={this.state.filteredLangs} filterClick={this.filterClick} />
             </React.Fragment>
         );
     }
