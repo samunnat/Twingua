@@ -12,7 +12,7 @@ import com.redislabs.provider.redis._
 object AnalyzerDriver{
   val catalog =
   s"""{
-      |"table":{"namespace":"default", "name":"tweets"},
+      |"table":{"namespace":"default", "name":"tweets_all"},
       |"rowkey":"id",
       |"columns":{
         |"id":{"cf":"rowkey", "col":"id", "type":"string"},
@@ -26,14 +26,6 @@ object AnalyzerDriver{
         |"retCount":{"cf":"tweetFamily", "col":"retweet_count", "type":"string"}
       |}
     |}""".stripMargin
-  
-    // The schema is encoded in a string
-  val schemaString = ""
-
-  // Generate the schema based on the string of schema
-  // val fields = schemaString.split(" ")
-  //   .map(fieldName => StructField(fieldName, StringType, nullable = true))
-  // val analyticsSchema = StructType(fields)
 
   def main(args: Array[String]) {
 
@@ -51,13 +43,16 @@ object AnalyzerDriver{
 
     import sqlContext.implicits._
 
+    val allowedLangs = List("en", "ar", "bn", "cs", "da", "de", "el", "es", "fa", "fi", "fil", "fr", "he", "hi", "hu", "id", "it", "ja", "ko", "msa", "nl", "no", "pl", "pt", "ro", "ru", "sv", "th", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw").map(x => "\"" + x + "\"")
+    println(allowedLangs)
+
     def getHbaseDataframe(cat: String): DataFrame = {
       val filteredDf = sqlContext
                         .read
                         .options(Map(HBaseTableCatalog.tableCatalog->cat))
                         .format("org.apache.spark.sql.execution.datasources.hbase")
                         .load()
-                        .filter($"id" > (batchNum+"_") && $"id" <= (batchNum+"`"))  // ` is after _ in lexicographical order
+                        .filter( ($"language".isin(allowedLangs:_*))===true )  // ` is after _ in lexicographical order
       
       // Hbase has some numberical columns that it stores as strings
       // so casting them into integers in the dataframe
@@ -72,60 +67,65 @@ object AnalyzerDriver{
     val df = getHbaseDataframe(catalog)
     df.show()
 
-    def getCountriesStats() = {
-      val countriesDf = df.groupBy("country_code", "language")
-                          .agg(
-                            count("language").alias("langCount")
-                          )
-                          .groupBy("country_code")
-                          .agg(collect_set(struct(col("language"), col("langCount"))).alias("geoJSON"))
-      countriesDf.show()
-    }
-
-    // println("Countries and language counts")
-    // getCountriesStats()
-
-    def getHashLangsMergedWithPrecision( precision: Int ): DataFrame = {
-      precision match {
-        case i if i >= 3 && i < 6 => {
-          df.withColumn("subHash", substring($"geohash", 0, precision))
+    def getHashLangCrossTab( geoPrecision: Int ): DataFrame = {
+      geoPrecision match {
+        case i if i > 0 && i < 6 => {
+          val crossTabDf = df.withColumn("subHash", substring($"geohash", 0, geoPrecision))
             .stat.crosstab("subHash", "language").withColumnRenamed("subhash_language", "geo")
+          
+          crossTabDf.withColumn( "total", crossTabDf.columns.collect{ case x if x != "geo" => col(x) }.reduce(_ + _) )
         }
         case 6 | _ =>  {
-          df.stat.crosstab("geohash", "language").withColumnRenamed("geohash_language", "geo")
+          val crossTabDf = df.stat.crosstab("geohash", "language")
+            .withColumnRenamed("geohash_language", "geo")
+          
+          crossTabDf.withColumn( "total", crossTabDf.drop("geo").columns.map(c => col(c)).reduce(_ + _) )
         }
       }
     }
 
-    def getJsonRDD( dataFr: DataFrame ) = {
-      dataFr.select(col("geo"), to_json(struct(dataFr.drop("geo").col("*"))))
-            .map( 
+    // def getMergedRDD( redisRDD, sparkRDD ) = {
+    //   val geoRDD = sc.fromRedisKV("")
+    // }
+
+    def getJsonScoreRDD( dataFr: DataFrame, headerName: String ) = {
+      dataFr.select(col(headerName), to_json(struct(dataFr.drop(headerName).col("*"))))
+            .map(
               row => (
-                      "{" + "\"" + row.getString(0) + "\"" + ":" + row.getString(1) + "}", 
-                      "0"   // sorted-set-score -> will be converted to double by spark-redis library later
+                      "{" + "\"" + row.getString(0) + "\"" + ":" + row.getString(1) + "}"
+                      ,"0"   // sorted-set-score -> will be converted to double by spark-redis library later
                     ) 
             ).rdd
     }
-    
-    // each row is a geohash, and a list of languages and their counts
-    // ex: eyd68x: [["pt", 1], ["en", 5]]
-    val hexash = getHashLangsMergedWithPrecision(6)
-    hexash.show()
 
-    val hexashrdd = getJsonRDD(hexash)
-    sc.toRedisZSET(hexashrdd, "geohash.6")
+    def writeCountryLangStats() = {
+      val countriesDf = df.stat.crosstab("country_code", "language").withColumnRenamed("country_code_language", "country_code")
+      val countriesDfWithTotals = countriesDf.withColumn( "total", countriesDf.drop("country_code").columns.map(c => col(c)).reduce(_ + _) )
+      countriesDfWithTotals.select("country_code", "total").show()
 
-    val pentash = getHashLangsMergedWithPrecision(5)
-    pentash.show()
+      val countriesrdd = getJsonScoreRDD( countriesDfWithTotals, "country_code")
+      sc.toRedisZSET(countriesrdd, "countries")
+    }
 
-    val quartash = getHashLangsMergedWithPrecision(4)
-    quartash.show()
+    def writeGeohashLangStats( precisions: Array[Int] ) = {
+      for( precision <- precisions ) {
+        println("Writing geohash-precision-" + precision + " stats to Redis...")
 
-    val triash = getHashLangsMergedWithPrecision(3)
-    triash.show()
+        val geoDf = getHashLangCrossTab(precision)
+        geoDf.show()
 
-    val triashrdd = getJsonRDD(triash)
-    sc.toRedisZSET(triashrdd, "geohash.3")
+        val geoJsonRDD = getJsonScoreRDD(geoDf, "geo")
+        sc.toRedisZSET(geoJsonRDD, "geohash."+precision)
+
+        println("Precision " + precision + " write complete")
+        println()
+      }
+    }
+
+    var precisionsToWrite = Array(6, 5, 4, 3)
+
+    writeGeohashLangStats(precisionsToWrite)
+    writeCountryLangStats()
 
     // writing hashes and languages to file
     // coalesce(1) is merging all partitions of dataframe into one, so only 1 file is written
