@@ -1,5 +1,4 @@
 import * as React from "react";
-import Button from "@material-ui/core/Button";
 import {stylesListToClassNames} from "../../lib/utils";
 
 const classes = stylesListToClassNames({
@@ -11,7 +10,15 @@ const classes = stylesListToClassNames({
     },
     buttonContainer: {
         display: "flex",
+        justifyContent: "space-around",
+        height: "20px",
+    },
+    button: {
+        fontSize: "12px",
+        display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
+        padding: "7px",
     },
     info: {
         marginBottom: "10px",
@@ -26,10 +33,11 @@ const classes = stylesListToClassNames({
         width: "100%",
         display: "flex",
         cursor: "pointer",
+        fontSize: "12px",
     },
     legendColor: {
-        width: "12px",
-        height: "12px",
+        width: "8px",
+        height: "8px",
         float: "left",
         boxShadow: "1px 2px rgba(0, 0, 0, 0.2)",
         margin: "2px 8px 2px 4px",
@@ -105,8 +113,12 @@ class Legend extends React.Component {
                             <React.Fragment />
                         ) : (
                             <React.Fragment>
-                                <Button onClick={() => this.props.filterClick("", true, false)}>Select All</Button>
-                                <Button onClick={() => this.props.filterClick("", false, true)}>Deselect All</Button>
+                                <div className={classes.button} id="selectButton" onClick={() => this.props.filterClick("", true, false)}>
+                                    Select All
+                                </div>
+                                <div className={classes.button} id="selectButton" onClick={() => this.props.filterClick("", false, true)}>
+                                    Deselect All
+                                </div>
                             </React.Fragment>
                         )}
                     </div>

@@ -6,8 +6,8 @@ import * as d3Select from "d3-selection";
 import RadioButton from "../atoms/radioButton.jsx";
 import Navigator from "./Navigator";
 import Legend from "./legend.jsx";
-import {stylesListToClassNames} from "../../lib/utils";
-import MyWorker from "worker-loader!./worker.js";
+import {stylesListToClassNames, getCountryName} from "../../lib/utils";
+import LanguageWorker from "worker-loader!./language-worker.js";
 
 var drawerWidth = 256;
 const classes = stylesListToClassNames({
@@ -125,6 +125,7 @@ class Map extends React.Component {
             radioValue: "label",
             data: {},
             filteredLangs: [],
+            countryData: {},
         };
     }
 
@@ -135,6 +136,7 @@ class Map extends React.Component {
         this.socket = socketIO("http://34.83.68.81:3000");
         // this.socket = socketIO("http://localhost:4000");
         this.socket.on("return-languages", this.addPolygons);
+        this.socket.on("return-country-stats", this.getCountryData);
 
         // Creating the map
         // NOTE: Might want to add bounds to the map
@@ -184,6 +186,7 @@ class Map extends React.Component {
         };
 
         this.socket.emit("get-languages", SW, NE, this.prevPrecision, true);
+        this.socket.emit("get-country-stats");
 
         // Map zoom handler
         this.map.on("moveend", this.mapViewChangeHandler); // This handles moving and zoom
@@ -211,10 +214,10 @@ class Map extends React.Component {
         const quarter3 = rightData.splice(0, quarterLength2);
         const quarter4 = rightData;
 
-        const worker1 = new MyWorker();
-        const worker2 = new MyWorker();
-        const worker3 = new MyWorker();
-        const worker4 = new MyWorker();
+        const worker1 = new LanguageWorker();
+        const worker2 = new LanguageWorker();
+        const worker3 = new LanguageWorker();
+        const worker4 = new LanguageWorker();
 
         // Added events for when the workers message the main thread
         this.addWorkerEvents(worker1, 1);
@@ -228,6 +231,22 @@ class Map extends React.Component {
         worker2.postMessage({data: quarter2, colors: colors, filter: this.state.filteredLangs, batch: this.curBatch, zoom: this.map.getZoom()});
         worker3.postMessage({data: quarter3, colors: colors, filter: this.state.filteredLangs, batch: this.curBatch, zoom: this.map.getZoom()});
         worker4.postMessage({data: quarter4, colors: colors, filter: this.state.filteredLangs, batch: this.curBatch, zoom: this.map.getZoom()});
+    };
+
+    getCountryData = (data) => {
+        this.setState({
+            countryData: data
+                .map((countryData) => {
+                    const countryKey = Object.keys(countryData)[0];
+                    const countryName = getCountryName(countryKey);
+                    const obj = {};
+                    obj[countryName] = countryData[countryKey];
+                    return obj;
+                })
+                .filter((ele) => {
+                    return Object.keys(ele)[0] !== "null";
+                }),
+        });
     };
 
     addWorkerEvents = (worker) => {
@@ -379,6 +398,8 @@ class Map extends React.Component {
             this.loadedCoords = bounds;
             this.socket.emit("get-languages", SW, NE, precision, true);
         }
+
+        this.socket.emit("get-country-stats");
         this.prevZoom = e.target._zoom;
     };
 
@@ -490,7 +511,7 @@ class Map extends React.Component {
                 />
                 <div id="map" className={classes.map} />
                 <Hidden xsDown implementation="css">
-                    <Navigator PaperProps={{style: {width: drawerWidth}}} data={this.state.data} />
+                    <Navigator PaperProps={{style: {width: drawerWidth}}} data={this.state.data} countryData={this.state.countryData} />
                 </Hidden>
                 <Legend langColors={colors} langKeyToStr={langKeyToStr} filteredLangs={this.state.filteredLangs} filterClick={this.filterClick} />
             </React.Fragment>

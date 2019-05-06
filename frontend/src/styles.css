@@ -1,7 +1,7 @@
 body {
     margin: 0px;
 }
-
+#selectButton:hover,
 #legend-ele:hover {
     background: #eeeeee;
     cursor: pointer;
