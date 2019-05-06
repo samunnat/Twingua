@@ -3,7 +3,7 @@ body {
 }
 
 #legend-ele:hover {
-    background: #e0e0e0;
+    background: #eeeeee;
     cursor: pointer;
     border-radius: 6%;
 }
