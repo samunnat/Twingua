@@ -19,8 +19,16 @@ import {stylesListToClassNames, getCountryName} from "../../lib/utils";
 const classes = stylesListToClassNames({
     chartContainer: {
         display: "block",
-        width: "50%",
+        width: "47%",
         float: "left",
+        fontFamily: "Roboto, sans-serif",
+        border: "1px solid #bbbec1",
+        borderRadius: "4%",
+        padding: "0px 4px 6px 8px",
+        margin: "5px",
+    },
+    container: {
+        justifyContent: "space-around",
     }
 });
 
@@ -150,8 +158,10 @@ class MaxWidthDialog extends React.Component {
                 <Dialog fullWidth="true" maxWidth="xl" open="open" onClose={this.props.handleClose} aria-labelledby="max-width-dialog-title">
                     <DialogTitle id="max-width-dialog-title">Country Statistics</DialogTitle>
                     <DialogContent>
-                        <DialogContentText>You can set my maximum width and whether to adapt or not.</DialogContentText>
-                        {this.createPieCharts()}
+                        <DialogContentText>Language use per country</DialogContentText>
+                        <div className={classes.container}>
+                            {this.createPieCharts()}
+                        </div>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={this.props.handleClose} color="primary">
