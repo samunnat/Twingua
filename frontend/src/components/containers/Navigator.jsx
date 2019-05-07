@@ -178,7 +178,7 @@ class Navigator extends React.Component {
                         ))}
                     </List>
                 </Drawer>
-                {this.state.piechartsOpened ? <MaxWidthDialog handleClose={() => this.setState({piechartsOpened: false})} /> : <React.Fragment />}
+                {this.state.piechartsOpened ? <MaxWidthDialog countryData={this.props.countryData} handleClose={() => this.setState({piechartsOpened: false})} /> : <React.Fragment />}
             </React.Fragment>
         );
     }

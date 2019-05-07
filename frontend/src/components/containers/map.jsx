@@ -38,7 +38,7 @@ const classes = stylesListToClassNames({
     buttonClose: {
         position: "absolute",
         top: "2%",
-        left: drawerWidth - 10,
+        left: drawerWidth - 60,
         color: "white",
         zIndex: 20000,
     },
