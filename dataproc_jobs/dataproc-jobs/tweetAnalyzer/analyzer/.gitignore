@@ -1,0 +1,5 @@
+build/
+project/
+target/
+*.class
+notes.txt
