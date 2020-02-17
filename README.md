@@ -6,6 +6,6 @@
 - Twitter API
 - Google Cloud Storage
 - Apache HBase
-- Apache Spark
+- Spark
 - Redis
 - Leaflet
