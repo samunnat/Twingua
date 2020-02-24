@@ -5,8 +5,6 @@
 ## Tools Used
 - Twitter API
 - Google Cloud Storage
-- Apache HBase
-- Apache Hadoop (MapReduce)
-- Apache Spark
+- Hadoop Ecosystem (HBase, MapReduce, Spark)
 - Redis
 - Leaflet
